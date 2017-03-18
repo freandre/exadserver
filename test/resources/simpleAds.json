@@ -1,0 +1,163 @@
+[{
+    "adid": 564334,
+    "targeting": {
+        "departement": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        },
+        "pmp": {
+            "data": [
+
+            ],
+            "inclusive": true
+        },
+        "os": {
+            "data": [
+                "android"
+            ],
+            "inclusive": true
+        },
+        "language": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        },
+        "country": {
+            "data": [
+                "FR"
+            ],
+            "inclusive": true
+        },
+        "support": {
+            "data": [
+                "fr.two4tea.fightlist",
+                "fr.r0ro.android.FreeTelec",
+                "com.ea.game.scrabblemattel_bv",
+                "com.kathleenOswald.solitaireGooglePlay",
+                "com.Photo.Emoji.Photo.Sticker.Maker.pro"
+            ],
+            "inclusive": false
+        },
+        "support_type": {
+            "data": [
+                "app",
+                "website"
+            ],
+            "inclusive": true
+        },
+        "carrier": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        },
+        "devicetype": {
+            "data": [
+                "phone"
+            ],
+            "inclusive": true
+        },
+        "time": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        },
+        "device": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        },
+        "geo": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        }
+    }
+}, {
+    "adid": 564335,
+    "targeting": {
+        "departement": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        },
+        "pmp": {
+            "data": [
+
+            ],
+            "inclusive": true
+        },
+        "os": {
+            "data": [
+                "android"
+            ],
+            "inclusive": true
+        },
+        "language": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        },
+        "country": {
+            "data": [
+                "FR"
+            ],
+            "inclusive": true
+        },
+        "support": {
+            "data": [
+                "fr.two4tea.fightlist",
+                "fr.r0ro.android.FreeTelec",
+                "leroy.merlin",
+                "barbie",
+                "king.jouet"
+            ],
+            "inclusive": false
+        },
+        "support_type": {
+            "data": [
+                "app",
+                "website"
+            ],
+            "inclusive": true
+        },
+        "carrier": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        },
+        "devicetype": {
+            "data": [
+                "phone"
+            ],
+            "inclusive": true
+        },
+        "time": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        },
+        "device": {
+            "data": [
+                "samsuung S3"
+            ],
+            "inclusive": true
+        },
+        "geo": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        }
+    }
+}]
