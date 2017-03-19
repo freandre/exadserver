@@ -69,9 +69,8 @@ defmodule AdServerTest do
     {:ok, adserver} = Server.AdServer.start_link
     Enum.each(context.simpleAdsData, &Server.AdServer.loadAd(adserver, &1))
 
-    returned = Server.AdServer.filterAd(adserver)
+    returned = Server.AdServer.filterAd(adserver, %{})
 
     IO.puts(inspect(returned))
-    
   end
 end
