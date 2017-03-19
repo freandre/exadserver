@@ -1,4 +1,6 @@
 defmodule Server.AdServer do
+  @compile {:parse_transform, :ms_transform}
+
   alias :ets, as: ETS
   use GenServer
 
@@ -87,28 +89,36 @@ defmodule Server.AdServer do
   end
 
   defp validateRequest(adRequest, indexes) do
-    case Enum.all?(adRequest,
-                   fn({indexName, _}) -> Map.has_key?(indexes, indexName) end) do
-      true -> :ok
-      _ -> []
+    answer = adRequest |>
+             Enum.filter(fn({ixName, _}) -> !Map.has_key?(indexes, ixName) end) |>
+             Enum.map(fn({ixName, _}) -> ixName end) |>
+             Enum.reduce("", fn(ixName, acc) -> acc <> ixName end)
+
+    case answer do
+      "" -> :ok
+      _ -> "The following target attributes are not available: " <> answer
     end
   end
 
   defp filterRequest(adRequest, indexes, adsStore) do
     Enum.reduce(adRequest,
-         ETS.match(adsStore, {:"$1", :"_"}),
-             fn({indexName, indexValue}, acc) ->
-                 case acc do
-                     [] -> []
-                     _ -> findInIndex(indexes[indexName], indexValue) |>
-                          MapSet.intersection(acc)
-                 end
-             end)
+         MapSet.new(ETS.select(adsStore, ETS.fun2ms(fn({adId, _}) -> adId end))),
+         fn({indexName, indexValue}, acc) ->
+           case MapSet.size(acc) do
+             0 -> acc
+             _ -> findInIndex(indexes[indexName], indexValue) |>
+                  MapSet.intersection(acc)
+           end
+         end)
   end
 
   defp findInIndex(etsStore, value) do
-    ETS.select(etsStore, fn({{inclusive, storedValue}, id})
-          when inclusive == true and (value == "all" or storedValue == value)
-          -> id end)
+    MapSet.new(ETS.select(etsStore,
+                 ETS.fun2ms(fn({{inclusive, storedValue}, id})
+                              when inclusive == true
+                              and (storedValue == "all"
+                              or storedValue == value) ->
+                           id
+                 end)))
   end
 end
