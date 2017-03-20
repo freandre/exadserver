@@ -12,13 +12,14 @@ end
 
 defmodule AdServerTest do
   use AdServerCase, async: true
+  alias ExAdServer.Naive.AdServer, as: NaiveAdServer
 
   test "That our adServer can load some basic data", context do
-    {:ok, adserver} = Server.AdServer.start_link
-    Enum.each(context.simpleAdsData, &Server.AdServer.loadAd(adserver, &1))
+    {:ok, adserver} = NaiveAdServer.start_link
+    Enum.each(context.simpleAdsData, &NaiveAdServer.loadAd(adserver, &1))
     Enum.each(context.simpleAdsData,
               fn(ad) ->
-                returned = Server.AdServer.getAd(adserver, ad["adid"])
+                returned = NaiveAdServer.getAd(adserver, ad["adid"])
                 assert(returned == ad,
                       """
                       Ads are not identical
@@ -32,14 +33,14 @@ defmodule AdServerTest do
   end
 
   test "That our adServer can update some basic data", context do
-    {:ok, adserver} = Server.AdServer.start_link
-    Enum.each(context.simpleAdsData, &Server.AdServer.loadAd(adserver, &1))
+    {:ok, adserver} = NaiveAdServer.start_link
+    Enum.each(context.simpleAdsData, &NaiveAdServer.loadAd(adserver, &1))
 
     [ad | _] = context.simpleAdsData
     adMod = Map.put(ad, "test", "test")
 
-    Server.AdServer.loadAd(adserver, adMod)
-    returned = Server.AdServer.getAd(adserver, ad["adid"])
+    NaiveAdServer.loadAd(adserver, adMod)
+    returned = NaiveAdServer.getAd(adserver, ad["adid"])
 
     assert(returned != ad,
           """
@@ -52,10 +53,10 @@ defmodule AdServerTest do
   end
 
   test "That our adServer returns :notfound", context do
-    {:ok, adserver} = Server.AdServer.start_link
-    Enum.each(context.simpleAdsData, &Server.AdServer.loadAd(adserver, &1))
+    {:ok, adserver} = NaiveAdServer.start_link
+    Enum.each(context.simpleAdsData, &NaiveAdServer.loadAd(adserver, &1))
 
-    returned = Server.AdServer.getAd(adserver, 42)
+    returned = NaiveAdServer.getAd(adserver, 42)
 
     assert(returned == :notfound,
           """
@@ -68,10 +69,10 @@ defmodule AdServerTest do
   end
 
   test "That our adServer filter check args", context do
-    {:ok, adserver} = Server.AdServer.start_link
-    Enum.each(context.simpleAdsData, &Server.AdServer.loadAd(adserver, &1))
+    {:ok, adserver} = NaiveAdServer.start_link
+    Enum.each(context.simpleAdsData, &NaiveAdServer.loadAd(adserver, &1))
 
-    {status, reason} = Server.AdServer.filterAd(adserver, %{"anything" => "anything"})
+    {status, reason} = NaiveAdServer.filterAd(adserver, %{"anything" => "anything"})
 
     assert(status == :badArgument,
           """
@@ -85,12 +86,12 @@ defmodule AdServerTest do
   end
 
   test "That our adServer filter ads properly", context do
-    {:ok, adserver} = Server.AdServer.start_link
-    Enum.each(context.simpleAdsData, &Server.AdServer.loadAd(adserver, &1))
+    {:ok, adserver} = NaiveAdServer.start_link
+    Enum.each(context.simpleAdsData, &NaiveAdServer.loadAd(adserver, &1))
 
     Enum.each(context.adsFilterData,
               fn(%{"request" => request, "expected" => expected}) ->
-                  returned = Server.AdServer.filterAd(adserver, request)
+                  returned = NaiveAdServer.filterAd(adserver, request)
                   assert(returned == MapSet.new(expected),
                         """
                         Unable to handle filtering on request

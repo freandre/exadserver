@@ -1,4 +1,4 @@
-defmodule Server.AdServer do
+defmodule ExAdServer.Naive.AdServer do
   @compile {:parse_transform, :ms_transform}
 
   alias :ets, as: ETS
