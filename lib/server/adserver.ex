@@ -89,10 +89,10 @@ defmodule Server.AdServer do
   end
 
   defp validateRequest(adRequest, indexes) do
-    answer = adRequest |>
-             Enum.filter(fn({ixName, _}) -> !Map.has_key?(indexes, ixName) end) |>
-             Enum.map(fn({ixName, _}) -> ixName end) |>
-             Enum.reduce("", fn(ixName, acc) -> acc <> ixName end)
+    answer = adRequest
+             |> Enum.filter(fn({ixName, _}) -> !Map.has_key?(indexes, ixName) end)
+             |> Enum.map(fn({ixName, _}) -> ixName end)
+             |> Enum.reduce("", fn(ixName, acc) -> acc <> ixName end)
 
     case answer do
       "" -> :ok
@@ -106,19 +106,30 @@ defmodule Server.AdServer do
          fn({indexName, indexValue}, acc) ->
            case MapSet.size(acc) do
              0 -> acc
-             _ -> findInIndex(indexes[indexName], indexValue) |>
-                  MapSet.intersection(acc)
+             _ -> findInIndex(indexes[indexName], indexValue)
+                  |> MapSet.intersection(acc)
            end
          end)
   end
 
   defp findInIndex(etsStore, value) do
-    MapSet.new(ETS.select(etsStore,
+    dumpETS(etsStore)
+    ret = MapSet.new(ETS.select(etsStore,
                  ETS.fun2ms(fn({{inclusive, storedValue}, id})
-                              when inclusive == true
-                              and (storedValue == "all"
-                              or storedValue == value) ->
+                              when
+                              (inclusive == true and
+                                    (storedValue == "all" or storedValue == value))
+                                or (inclusive == false and storedValue != value)
+                              ->
                            id
                  end)))
+    IO.puts(inspect(ret))
+    ret
+  end
+
+  defp dumpETS(etsStore) do
+    IO.puts("Store: " <> Atom.to_string(ETS.info(etsStore)[:name]))
+    ETS.match(etsStore, :"$1")
+    |> Enum.each(&IO.puts(inspect(&1)))
   end
 end

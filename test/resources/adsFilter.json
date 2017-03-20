@@ -1,10 +1,36 @@
-[
-   {
-      "request":{
-        "departement" : 78
-      },
-      "expected":[
-
-      ]
-   }
+[{
+        "request": {
+            "language": "Polish",
+            "country": "Poland",
+            "support": "leroy.merlin",
+            "geo": ""
+        },
+        "expected": []
+    },
+    {
+        "request": {
+            "language": "Polish",
+            "country": "Russia",
+            "support": "leroy.merlin",
+            "geo": ""
+        },
+        "expected": [564336]
+    },
+    {
+        "request": {
+            "language": "French",
+            "country": "France",
+            "support": "fr.two4tea.fightlist",
+            "geo": ""
+        },
+        "expected": []
+    }, {
+        "request": {
+            "language": "French",
+            "country": "France",
+            "support": "fr.two4tea",
+            "geo": ""
+        },
+        "expected": [564334, 564335]
+    }
 ]

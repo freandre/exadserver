@@ -91,9 +91,10 @@ defmodule AdServerTest do
     Enum.each(context.adsFilterData,
               fn(%{"request" => request, "expected" => expected}) ->
                   returned = Server.AdServer.filterAd(adserver, request)
-                  assert(returned == expected,
+                  assert(returned == MapSet.new(expected),
                         """
-                        Unable to handle filtering
+                        Unable to handle filtering on request
+                        #{inspect(request)}
                         Expected:
                         #{inspect(expected)}
                         Had:

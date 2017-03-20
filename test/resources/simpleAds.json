@@ -1,33 +1,15 @@
 [{
     "adid": 564334,
     "targeting": {
-        "departement": {
-            "data": [
-                "all"
-            ],
-            "inclusive": true
-        },
-        "pmp": {
-            "data": [
-
-            ],
-            "inclusive": true
-        },
-        "os": {
-            "data": [
-                "android"
-            ],
-            "inclusive": true
-        },
         "language": {
             "data": [
-                "all"
+                "French"
             ],
             "inclusive": true
         },
         "country": {
             "data": [
-                "FR"
+                "France"
             ],
             "inclusive": true
         },
@@ -41,37 +23,6 @@
             ],
             "inclusive": false
         },
-        "support_type": {
-            "data": [
-                "app",
-                "website"
-            ],
-            "inclusive": true
-        },
-        "carrier": {
-            "data": [
-                "all"
-            ],
-            "inclusive": true
-        },
-        "devicetype": {
-            "data": [
-                "phone"
-            ],
-            "inclusive": true
-        },
-        "time": {
-            "data": [
-                "all"
-            ],
-            "inclusive": true
-        },
-        "device": {
-            "data": [
-                "all"
-            ],
-            "inclusive": true
-        },
         "geo": {
             "data": [
                 "all"
@@ -82,24 +33,6 @@
 }, {
     "adid": 564335,
     "targeting": {
-        "departement": {
-            "data": [
-                "all"
-            ],
-            "inclusive": true
-        },
-        "pmp": {
-            "data": [
-
-            ],
-            "inclusive": true
-        },
-        "os": {
-            "data": [
-                "android"
-            ],
-            "inclusive": true
-        },
         "language": {
             "data": [
                 "all"
@@ -108,7 +41,7 @@
         },
         "country": {
             "data": [
-                "FR"
+                "France"
             ],
             "inclusive": true
         },
@@ -122,34 +55,31 @@
             ],
             "inclusive": false
         },
-        "support_type": {
+        "geo": {
             "data": [
-                "app",
-                "website"
+                "all"
             ],
             "inclusive": true
-        },
-        "carrier": {
+        }
+    }
+}, {
+    "adid": 564336,
+    "targeting": {
+        "language": {
             "data": [
                 "all"
             ],
             "inclusive": true
         },
-        "devicetype": {
+        "country": {
             "data": [
-                "phone"
+                "Russia"
             ],
             "inclusive": true
         },
-        "time": {
+        "support": {
             "data": [
-                "all"
-            ],
-            "inclusive": true
-        },
-        "device": {
-            "data": [
-                "samsuung S3"
+                "leroy.merlin"
             ],
             "inclusive": true
         },
