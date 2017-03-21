@@ -24,7 +24,8 @@
             "geo": ""
         },
         "expected": []
-    }, {
+    },
+    {
         "request": {
             "language": "French",
             "country": "France",
