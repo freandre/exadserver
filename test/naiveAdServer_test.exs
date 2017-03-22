@@ -103,11 +103,4 @@ defmodule AdServerTest do
                         """)
               end)
   end
-
-  test "config" do
-    {:ok, configserver} = ExAdServer.Config.ConfigServer.start_link({"./test/resources/targetingData.json", 2})
-    {:ok, adserver} = NaiveAdServer.start_link
-    ExAdServer.Config.ConfigServer.getAd(configserver)
-    |> Enum.each(&NaiveAdServer.loadAd(adserver, &1))    
-  end
 end

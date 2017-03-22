@@ -1,8 +1,8 @@
 # bench/basic_bench.exs
 defmodule AdServerBench do
   use Benchfella
-  alias ExAdServer.Naive.AdServer, as: NaiveAdServer
   alias ExAdServer.Config.ConfigServer
+  alias ExAdServer.Naive.AdServer, as: NaiveAdServer
 
   @numberOfAds 1000
 

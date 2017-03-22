@@ -1,23 +1,40 @@
 defmodule  ExAdServer.Config.UnitTestProcessor do
   @behaviour ExAdServer.Config.BehaviorConfigProcessor
 
+  ## Behaviour Callbacks
+
   def init({path, numberOfAds}) do
     targetingData = File.read!(path)
                     |> Poison.decode!
     # generate ads
-    1..numberOfAds
-    |> Enum.to_list
-    |> Enum.reduce(%{},
-              fn(_, acc) ->
-                targetingObj = generateTargeting(targetingData)
-                Map.put(acc, targetingObj["adid"], targetingObj)
-              end)
+    adsMap = 1..numberOfAds
+            |> Enum.to_list
+            |> Enum.reduce(%{},
+                           fn(_, acc) ->
+                             targetingObj = generateTargeting(targetingData)
+                             Map.put(acc, targetingObj["adid"], targetingObj)
+                           end)
+    targetMetadata = Enum.reduce(targetingData, %{},
+                                 fn({targetName, values}, acc) ->
+                                   Map.put(acc, targetName, prepareMetadata(values))
+                                 end)
+
+    [adsMap: adsMap, targetMetadata: targetMetadata]
   end
 
-  def getAd(mapAds, adId) do
+  def getAd(keywordArgs, adId) do
+    adsMap = keywordArgs[:adsMap]
     case adId do
-      :all -> Enum.map(mapAds, fn({_, ad}) -> ad end)
-      true -> mapAds[adId]
+      :all -> Enum.map(adsMap, fn({_, ad}) -> ad end)
+      _ -> adsMap[adId]
+    end
+  end
+
+  def getMetadata(keywordArgs, targetName) do
+    targetMetadata = keywordArgs[:targetMetadata]
+    case targetName do
+      :all -> Map.to_list(targetMetadata)
+      _ -> targetMetadata[targetName]
     end
   end
 
@@ -50,8 +67,18 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
   defp recGenerateValueList(dataList, numberOfValues, listOfValue) do
     cond do
       length(listOfValue) < numberOfValues ->
-        recGenerateValueList(dataList, numberOfValues, listOfValue ++ [Enum.at(dataList, :rand.uniform(length(dataList)) - 1)])
+        recGenerateValueList(dataList, numberOfValues, listOfValue ++
+                      [Enum.at(dataList, :rand.uniform(length(dataList)) - 1)])
       true -> listOfValue
+    end
+  end
+
+  # Prepare metadata block cntaining type, if our type is finite, all distinct
+  # values are also returned
+  defp prepareMetadata(values) do
+    case values["type"] do
+      "finite" -> %{"type" => values["type"], "distinctvalues" => Enum.sort(values["data"])}
+      _ -> %{"type" => values["type"]}
     end
   end
 end

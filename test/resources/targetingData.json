@@ -1,4 +1,4 @@
-{  
+{
    "country":{
       "type":"finite",
       "data":[
@@ -448,7 +448,7 @@
       ]
    },
    "support":{
-      "type":"finite",
+      "type":"notfinite",
       "data":[
          "google.com",
          "youtube.com",
