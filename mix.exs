@@ -31,6 +31,7 @@ defmodule ExAdServer.Mixfile do
   defp deps do
     [
       {:poison, "~> 3.0"},
+      {:uuid, "~> 1.1" },
       {:benchfella, "~> 0.3.0"}
     ]
   end

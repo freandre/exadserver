@@ -2,10 +2,10 @@ defmodule AdServerCase do
   use ExUnit.CaseTemplate
 
   setup_all do
-    simpleAdsData = File.read!("./test/resources/simpleAds.json") |>
-                    Poison.decode!
-    adsFilterData = File.read!("./test/resources/adsFilter.json") |>
-                    Poison.decode!
+    simpleAdsData = File.read!("./test/resources/simpleAds.json")
+                    |> Poison.decode!
+    adsFilterData = File.read!("./test/resources/adsFilter.json")
+                    |> Poison.decode!
     {:ok, simpleAdsData: simpleAdsData, adsFilterData: adsFilterData}
   end
 end
@@ -102,5 +102,10 @@ defmodule AdServerTest do
                         #{inspect(returned)}
                         """)
               end)
+  end
+
+  test "config", context do
+    {:ok, configserver} = ExAdServer.Config.ConfigServer.start_link("./test/resources/targetingData.json")
+
   end
 end
