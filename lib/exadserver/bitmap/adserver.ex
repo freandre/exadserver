@@ -47,7 +47,7 @@ defmodule ExAdServer.Bitmap.AdServer do
   def init(targetMetadata) do
     adsStore = ETS.new(:adsStore, [:set, :protected])
     indexes = %{}
-    metadata = Enum.filter(targetMetadata, fn({_, values}) -> values["type"] == "finite" end)
+    metadata = getMetadata(targetMetadata)
     {:ok, [adsStore: adsStore, indexes: indexes, targetMetadata: metadata]}
   end
 
@@ -81,6 +81,20 @@ defmodule ExAdServer.Bitmap.AdServer do
   end
 
   ## Private functions
+
+  ## Prepare a list of processor to create keys. finite set are put first to filter
+  ## most of the request, followed by inifintie and finally the most computer
+  ## intensive geolocation
+  defp getMetadata(targetMetadata) do
+    finite = Enum.filter(targetMetadata, fn({_k, v}) -> v["type"] == "finite" end)
+    infinite = Enum.filter_map(targetMetadata,
+                               fn({_k, v}) -> v["type"] == "infinite" end,
+                               &({InfiniteKeyProcessor, &1}))
+    geo = Enum.filter_map(targetMetadata,
+                               fn({_k, v}) -> v["type"] == "geo" end,
+                               &({GeoKeyProcessor, &1}))
+    [{FiniteKeyProcessor, finite} | infinite] ++ geo
+  end
 
   ## Return a a store based on index name, instanciate it if it does not exists
   ## thus needing to return also the registry of stores

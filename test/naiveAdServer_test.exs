@@ -1,5 +1,3 @@
-require AdServerCase
- 
 defmodule NaiveAdServerTest do
   use AdServerCase, async: true
   alias ExAdServer.Naive.AdServer, as: NaiveAdServer

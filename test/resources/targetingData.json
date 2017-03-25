@@ -448,7 +448,7 @@
       ]
    },
    "support":{
-      "type":"notfinite",
+      "type":"infinite",
       "data":[
          "google.com",
          "youtube.com",

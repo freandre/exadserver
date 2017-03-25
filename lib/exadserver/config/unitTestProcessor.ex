@@ -1,5 +1,5 @@
 defmodule  ExAdServer.Config.UnitTestProcessor do
-  @behaviour ExAdServer.Config.BehaviorConfigProcessor
+  @behaviour BehaviorConfigProcessor
 
   ## Behaviour Callbacks
 
@@ -73,7 +73,7 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
     end
   end
 
-  # Prepare metadata block cntaining type, if our type is finite, all distinct
+  # Prepare metadata block containing type, if our type is finite, all distinct
   # values are also returned
   defp prepareMetadata(values) do
     case values["type"] do
