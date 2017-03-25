@@ -25,7 +25,7 @@ defmodule ExAdServer.Naive.AdServer do
 
   Returns the ad or :notfound
   """
-  def getAd(server, adId) when is_integer(adId) do
+  def getAd(server, adId) do
     GenServer.call(server, {:getAd, adId})
   end
 
@@ -145,12 +145,5 @@ defmodule ExAdServer.Naive.AdServer do
                            id
                  end)))
     MapSet.difference(included, excluded)
-  end
-
-  ## Utility function to dump the content of a store
-  defp dumpETS(etsStore) do
-    IO.puts("Store: " <> Atom.to_string(ETS.info(etsStore)[:name]))
-    ETS.match(etsStore, :"$1")
-    |> Enum.each(&IO.puts(inspect(&1)))
   end
 end

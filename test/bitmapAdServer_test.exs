@@ -1,4 +1,4 @@
-defmodule AdServerTest do
+defmodule BitmapAdServerTest do
   use AdServerCase, async: true
   alias ExAdServer.Naive.AdServer, as: NaiveAdServer
 

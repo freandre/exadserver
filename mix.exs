@@ -7,8 +7,12 @@ defmodule ExAdServer.Mixfile do
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     elixirc_paths: elixirc_paths(Mix.env),
      deps: deps()]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/test_helpers"]
+  defp elixirc_paths(_), do: ["lib"]
 
   # Configuration for the OTP application
   #
@@ -31,6 +35,7 @@ defmodule ExAdServer.Mixfile do
   defp deps do
     [
       {:poison, "~> 3.0"},
+      {:bitmap, git: "https://github.com/freandre/bitmap-elixir.git"},
       {:uuid, "~> 1.1" },
       {:benchfella, "~> 0.3.0"}
     ]

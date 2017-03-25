@@ -149,11 +149,4 @@ defmodule ExAdServer.Bitmap.AdServer do
                  end)))
     MapSet.difference(included, excluded)
   end
-
-  ## Utility function to dump the content of a store
-  defp dumpETS(etsStore) do
-    IO.puts("Store: " <> Atom.to_string(ETS.info(etsStore)[:name]))
-    ETS.match(etsStore, :"$1")
-    |> Enum.each(&IO.puts(inspect(&1)))
-  end
 end
