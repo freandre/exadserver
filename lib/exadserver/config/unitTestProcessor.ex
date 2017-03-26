@@ -1,5 +1,5 @@
 defmodule  ExAdServer.Config.UnitTestProcessor do
-  @behaviour BehaviorConfigProcessor
+  @behaviour ExAdServer.Config.BehaviorConfigProcessor
 
   ## Behaviour Callbacks
 

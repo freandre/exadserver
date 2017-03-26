@@ -2,6 +2,7 @@ defmodule ExAdServer.Bitmap.AdServer do
   @compile {:parse_transform, :ms_transform}
 
   alias :ets, as: ETS
+
   use GenServer
 
   ## Client API
@@ -56,7 +57,7 @@ defmodule ExAdServer.Bitmap.AdServer do
   def handle_call({:load, ad}, _from, state) do
     ETS.insert(state[:adsStore], {ad["adid"], ad})
     state = Keyword.put(state, :indexes,
-              Enum.reduce(ad["targeting"], state[:indexes], &createIndex(&1, ad["adid"], &2))
+              Enum.reduce(state[:targetMetadata], state[:indexes], &createIndex(ad, &1, &2))
             )
     {:reply, :ok, state}
   end
@@ -89,11 +90,12 @@ defmodule ExAdServer.Bitmap.AdServer do
     finite = Enum.filter(targetMetadata, fn({_k, v}) -> v["type"] == "finite" end)
     infinite = Enum.filter_map(targetMetadata,
                                fn({_k, v}) -> v["type"] == "infinite" end,
-                               &({InfiniteKeyProcessor, &1}))
+                               fn({k, v}) -> {k, ExAdServer.Bitmap.InfiniteKeyProcessor, v}
+                             end)
     geo = Enum.filter_map(targetMetadata,
                                fn({_k, v}) -> v["type"] == "geo" end,
-                               &({GeoKeyProcessor, &1}))
-    [{FiniteKeyProcessor, finite} | infinite] ++ geo
+                               fn({k, v}) -> {k, ExAdServer.Bitmap.GeoKeyProcessor, v} end)
+    [{"finite", ExAdServer.Bitmap.FiniteKeyProcessor, finite} | infinite] ++ geo
   end
 
   ## Return a a store based on index name, instanciate it if it does not exists
@@ -108,10 +110,10 @@ defmodule ExAdServer.Bitmap.AdServer do
     end
   end
 
-  ## Create an index based on given index data
-  defp createIndex({indexName, indexData}, adId, indexes) do
+  ## Create an index based on given index meta data
+  defp createIndex(ad, {indexName, indexProcessor, indexMetaData}, indexes) do
     {store, indexes} = getStore(indexName, indexes)
-    Enum.each(indexData["data"], &ETS.insert(store, {{indexData["inclusive"], &1}, adId}))
+    ETS.insert(store, indexProcessor.getIndexKey(ad, indexName, indexMetaData))
     indexes
   end
 
