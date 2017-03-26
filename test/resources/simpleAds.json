@@ -3,13 +3,13 @@
     "targeting": {
         "language": {
             "data": [
-                "French"
+                "fr"
             ],
             "inclusive": true
         },
         "country": {
             "data": [
-                "France"
+                "FR"
             ],
             "inclusive": true
         },
@@ -41,7 +41,7 @@
         },
         "country": {
             "data": [
-                "France"
+                "FR"
             ],
             "inclusive": true
         },
@@ -73,7 +73,7 @@
         },
         "country": {
             "data": [
-                "Russia"
+                "RU"
             ],
             "inclusive": true
         },

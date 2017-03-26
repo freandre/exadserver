@@ -113,7 +113,7 @@ defmodule ExAdServer.Bitmap.AdServer do
   ## Create an index based on given index meta data
   defp createIndex(ad, {indexName, indexProcessor, indexMetaData}, indexes) do
     {store, indexes} = getStore(indexName, indexes)
-    ETS.insert(store, indexProcessor.getIndexKey(ad, indexName, indexMetaData))
+    ETS.insert(store, indexProcessor.getIndexKeyForStorage(ad, indexName, indexMetaData))
     indexes
   end
 

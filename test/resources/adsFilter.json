@@ -1,7 +1,7 @@
 [{
         "request": {
-            "language": "Polish",
-            "country": "Poland",
+            "language": "pl",
+            "country": "PL",
             "support": "leroy.merlin",
             "geo": ""
         },
@@ -9,8 +9,8 @@
     },
     {
         "request": {
-            "language": "Polish",
-            "country": "Russia",
+            "language": "pl",
+            "country": "RU",
             "support": "leroy.merlin",
             "geo": ""
         },
@@ -18,8 +18,8 @@
     },
     {
         "request": {
-            "language": "French",
-            "country": "France",
+            "language": "fr",
+            "country": "FR",
             "support": "fr.two4tea.fightlist",
             "geo": ""
         },
@@ -27,8 +27,8 @@
     },
     {
         "request": {
-            "language": "French",
-            "country": "France",
+            "language": "fr",
+            "country": "FR",
             "support": "fr.two4tea",
             "geo": ""
         },
