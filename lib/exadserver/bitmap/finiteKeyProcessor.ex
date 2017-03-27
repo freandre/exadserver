@@ -9,12 +9,9 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
   def generateAndStoreIndex(adConf, {indexName, indexMetadata}, indexes) do
     {store, indexes} = ExAdServer.Utils.Storage.getStore(indexName, indexes)
 
-    {key, _size} = Enum.reduce(indexMetadata, {0, 0},
-                              fn({name, values}, acc) ->
-                                encodeSingleTarget(adConf["targeting"][name],
-                                                   values["distinctvalues"])
-                                |> aggregateAccumulators(acc)
-                              end)
+    {key, _size} = encodeSingleTarget(adConf["targeting"][indexName],
+                                      indexMetadata["distinctvalues"])
+
     ETS.insert(store, {key, adConf["adid"]})
     indexes
   end
@@ -50,11 +47,6 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
       0 -> data
       _ -> generateOne((data <<< 1) ||| 1, size - 1)
     end
-  end
-
-  ## Aggregator for tuple {data, size}
-  defp aggregateAccumulators({firstData, firstSize}, {secData, secSize}) do
-    {generateOne(firstData, secSize) &&& secData, firstSize + secSize}
   end
 
   ## Negate the data of the tuple is inclusive is false

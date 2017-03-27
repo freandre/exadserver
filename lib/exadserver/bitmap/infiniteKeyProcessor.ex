@@ -12,7 +12,6 @@ defmodule ExAdServer.Bitmap.InfiniteKeyProcessor do
     inclusive = adConf["targeting"][indexName]["inclusive"]
 
     ETS.insert(store, Enum.map(targeter, &({{inclusive, &1}, adConf["adid"]})))
-
     indexes
   end
 

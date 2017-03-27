@@ -90,15 +90,15 @@ defmodule ExAdServer.Bitmap.AdServer do
   ## most of the request, followed by inifintie and finally the most computer
   ## intensive geolocation
   defp getMetadata(targetMetadata) do
-    finite = Enum.filter(targetMetadata, fn({_k, v}) -> v["type"] == "finite" end)
-    infinite = Enum.filter_map(targetMetadata,
-                               fn({_k, v}) -> v["type"] == "infinite" end,
-                               fn({k, v}) -> {k, ExAdServer.Bitmap.InfiniteKeyProcessor, v}
-                             end)
-    geo = Enum.filter_map(targetMetadata,
-                               fn({_k, v}) -> v["type"] == "geo" end,
-                               fn({k, v}) -> {k, ExAdServer.Bitmap.GeoKeyProcessor, v} end)
-    [{"finite", ExAdServer.Bitmap.FiniteKeyProcessor, finite} | infinite] ++ geo
+    {finite, infinite, geo} = Enum.reduce(targetMetadata, {[], [], []},
+                fn({k, v}, {finite, infinite, geo}) ->
+                  case v["type"] do
+                    "finite" -> {[{k, ExAdServer.Bitmap.FiniteKeyProcessor, v} | finite], infinite, geo}
+                    "infinite" -> {finite, [{k, ExAdServer.Bitmap.InfiniteKeyProcessor, v} | infinite], geo}
+                    "geo" -> {finite, infinite, [{k, ExAdServer.Bitmap.GeoKeyProcessor, v} | geo]}
+                  end
+                end)
+    finite ++ infinite ++ geo
   end
 
   ## Validate that a filtering request provides a set of know targets
