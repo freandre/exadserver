@@ -1,18 +1,22 @@
 defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
-  use Bitwise
-
   @behaviour ExAdServer.Config.BehaviorKeysProcessor
 
-  ## Behaviour Callbacks
+  alias :ets, as: ETS
 
-  def getIndexKeyForStorage(adConf, _indexName, indexMetadata) do
+  use Bitwise
+
+  ## Behaviour Callbacks
+  def generateAndStoreIndex(adConf, {indexName, indexMetadata}, indexes) do
+    {store, indexes} = ExAdServer.Utils.Storage.getStore(indexName, indexes)
+
     {key, _size} = Enum.reduce(indexMetadata, {0, 0},
                               fn({name, values}, acc) ->
                                 encodeSingleTarget(adConf["targeting"][name],
                                                    values["distinctvalues"])
                                 |> aggregateAccumulators(acc)
                               end)
-    {key, adConf["adid"]}
+    ETS.insert(store, {key, adConf["adid"]})
+    indexes
   end
 
   ## Private functions

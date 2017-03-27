@@ -54,11 +54,14 @@ defmodule ExAdServer.Bitmap.AdServer do
 
   ## handle_call callback for :load action, iterate on targeting keys creating
   ## an index for each
-  def handle_call({:load, ad}, _from, state) do
-    ETS.insert(state[:adsStore], {ad["adid"], ad})
+  def handle_call({:load, adConf}, _from, state) do
+    ETS.insert(state[:adsStore], {adConf["adid"], adConf})
     state = Keyword.put(state, :indexes,
-              Enum.reduce(state[:targetMetadata], state[:indexes], &createIndex(ad, &1, &2))
-            )
+              Enum.reduce(state[:targetMetadata], state[:indexes],
+              fn({indexName, indexProcessor, indexMetaData}, indexes)->
+                indexProcessor.generateAndStoreIndex(adConf, {indexName, indexMetaData}, indexes)
+              end
+            ))
     {:reply, :ok, state}
   end
 
@@ -96,25 +99,6 @@ defmodule ExAdServer.Bitmap.AdServer do
                                fn({_k, v}) -> v["type"] == "geo" end,
                                fn({k, v}) -> {k, ExAdServer.Bitmap.GeoKeyProcessor, v} end)
     [{"finite", ExAdServer.Bitmap.FiniteKeyProcessor, finite} | infinite] ++ geo
-  end
-
-  ## Return a a store based on index name, instanciate it if it does not exists
-  ## thus needing to return also the registry of stores
-  defp getStore(indexName, indexes) do
-    if !Map.has_key?(indexes, indexName) do
-      store = ETS.new(String.to_atom(indexName), [:bag, :protected])
-      newIndexes = Map.put(indexes, indexName, store)
-      {store, newIndexes}
-    else
-      {indexes[indexName], indexes}
-    end
-  end
-
-  ## Create an index based on given index meta data
-  defp createIndex(ad, {indexName, indexProcessor, indexMetaData}, indexes) do
-    {store, indexes} = getStore(indexName, indexes)
-    ETS.insert(store, indexProcessor.getIndexKeyForStorage(ad, indexName, indexMetaData))
-    indexes
   end
 
   ## Validate that a filtering request provides a set of know targets

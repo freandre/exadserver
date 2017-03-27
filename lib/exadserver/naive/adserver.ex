@@ -1,6 +1,8 @@
 defmodule ExAdServer.Naive.AdServer do
   @compile {:parse_transform, :ms_transform}
 
+  import ExAdServer.Utils.Storage
+
   alias :ets, as: ETS
   use GenServer
 
@@ -78,18 +80,6 @@ defmodule ExAdServer.Naive.AdServer do
   end
 
   ## Private functions
-
-  ## Return a a store based on index name, instanciate it if it does not exists
-  ## thus needing to return also the registry of stores
-  defp getStore(indexName, indexes) do
-    if !Map.has_key?(indexes, indexName) do
-      store = ETS.new(String.to_atom(indexName), [:bag, :protected])
-      newIndexes = Map.put(indexes, indexName, store)
-      {store, newIndexes}
-    else
-      {indexes[indexName], indexes}
-    end
-  end
 
   ## Create an index based on given index data
   defp createIndex({indexName, indexData}, adId, indexes) do
