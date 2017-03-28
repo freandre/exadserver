@@ -77,7 +77,6 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
       else
         listOfValue
       end
-    end
   end
 
   # Prepare metadata block containing type, if our type is finite, all distinct

@@ -1,4 +1,8 @@
 defmodule ExAdServer.Utils.Storage do
+  @moduledoc """
+  Storage helper module.
+  """
+
   alias :ets, as: ETS
 
   @doc """
@@ -6,17 +10,18 @@ defmodule ExAdServer.Utils.Storage do
   """
   def dumpETS(etsStore) do
     IO.puts("Store: " <> Atom.to_string(ETS.info(etsStore)[:name]))
-    ETS.match(etsStore, :"$1")
+    etsStore
+    |> ETS.match(:"$1")
     |> Enum.each(&IO.puts(inspect(&1)))
   end
 
   ## Return a a store based on index name, instanciate it if it does not exists
   ## thus needing to return also the store registry
   def getStore(indexName, indexes) do
-    if !Map.has_key?(indexes, indexName) do
+    if Map.has_key?(indexes, indexName) == false do
       store = ETS.new(String.to_atom(indexName), [:bag, :protected])
-      newIndexes = Map.put(indexes, indexName, store)
-      {store, newIndexes}
+      new_indexes = Map.put(indexes, indexName, store)
+      {store, new_indexes}
     else
       {indexes[indexName], indexes}
     end

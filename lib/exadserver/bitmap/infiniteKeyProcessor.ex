@@ -5,12 +5,13 @@ defmodule ExAdServer.Bitmap.InfiniteKeyProcessor do
 
   @behaviour ExAdServer.Config.BehaviorKeysProcessor
 
+  import ExAdServer.Utils.Storage
   alias :ets, as: ETS
 
   ## Behaviour Callbacks
 
   def generateAndStoreIndex(adConf, {indexName, _indexMetadata}, indexes) do
-    {store, indexes} = ExAdServer.Utils.Storage.getStore(indexName, indexes)
+    {store, indexes} = getStore(indexName, indexes)
 
     targeter = adConf["targeting"][indexName]["data"]
     inclusive = adConf["targeting"][indexName]["inclusive"]
@@ -19,11 +20,7 @@ defmodule ExAdServer.Bitmap.InfiniteKeyProcessor do
     indexes
   end
 
-  def getFilterForETSSelect(indexName, indexMetadata) do
-
-  end
-
-  def findInIndex(ad, {indexName, indexMetadata}, indexes) do
+  def findInIndex(ad, {indexName, _indexMetadata}, indexes) do
     store = getStore(indexName, indexes)
     value = ad[indexName]
 
