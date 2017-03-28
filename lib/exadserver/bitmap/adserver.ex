@@ -4,8 +4,6 @@ defmodule ExAdServer.Bitmap.AdServer do
   Finite values are encoded to bitmap integer for performance
   """
 
-  @compile {:parse_transform, :ms_transform}
-
   alias :ets, as: ETS
 
   use GenServer
@@ -65,8 +63,7 @@ defmodule ExAdServer.Bitmap.AdServer do
               Enum.reduce(state[:targetMetadata], state[:indexes],
               fn({indexName, indexProcessor, indexMetaData}, indexes) ->
                 indexProcessor.generateAndStoreIndex(adConf, {indexName, indexMetaData}, indexes)
-              end
-            ))
+              end))
     {:reply, :ok, state}
   end
 
@@ -82,11 +79,15 @@ defmodule ExAdServer.Bitmap.AdServer do
   ## targeting request
   def handle_call({:filter, adRequest}, _from, state) do
     indexes = state[:indexes]
+    Enum.reduce(state[:targetMetadata],
+                    fn({indexName, indexProcessor, indexMetaData}, acc) ->
+                      #indexProcessor.findInIndex(adRequest,
+                                        #{indexName, indexMetaData}, indexes)
 
-    case validateRequest(adRequest, indexes) do
-      :ok -> {:reply, filterRequest(adRequest, indexes, state[:adsStore]), state}
-      reason -> {:reply, {:badArgument, reason}, state}
-    end
+                      #TODO pour determiner la premiere iteration, acc == first element de metadata
+                                        IO.puts(inspect(acc))
+                                        acc
+                    end)
   end
 
   ## Private functions
@@ -117,11 +118,5 @@ defmodule ExAdServer.Bitmap.AdServer do
       "" -> :ok
       _ -> "The following target attributes are not available: " <> answer
     end
-  end
-
-  ## Main filtering function, thanks to an accumulator initalized to all ad values,
-  ## we iterate on index removing datas from this accumulator
-  defp filterRequest(adRequest, indexes, adsStore) do
-
   end
 end

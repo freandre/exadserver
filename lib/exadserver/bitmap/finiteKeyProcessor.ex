@@ -2,6 +2,7 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
   @moduledoc """
   Finite key processor implementation.
   """
+  @compile {:parse_transform, :ms_transform}
 
   use Bitwise
 
@@ -22,17 +23,29 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
   end
 
   def findInIndex(ad, {indexName, indexMetadata}, indexes) do
-    #{key, _size} = encodeSingleTarget(ad[indexName], indexMetadata["distinctvalues"])
+    {store, _indexes} = getStore(indexName, indexes)
 
+    {key, _size} = encodeSingleTarget(ad[indexName],
+                                      indexMetadata["distinctvalues"],
+                                      false)
+    MapSet.new(ETS.select(store,
+                          ETS.fun2ms(fn({stored_key, id})
+                              when
+                                ((stored_key &&& key) == key)
+                                or ((stored_key ||| key) == 0)
+                              ->
+                                id
+                              end)))
   end
 
   ## Private functions
 
   ## Encode a single target, the first argument is one of the targeting attribute
-  ## the seconde the associated distinct values for this attribute
-  defp encodeSingleTarget(targeter, metadata) do
+  ## the second the associated distinct values for this attribute the last indicates
+  ## the behavior if targeter is unknown
+  defp encodeSingleTarget(targeter, metadata, fillWithOne \\ true) do
     cond do
-    targeter == nil -> generateAll(length(metadata))
+    targeter == nil -> generateAll(length(metadata), fillWithOne)
     targeter["data"] == "all" -> metadata
                                  |> length()
                                  |> generateAll()
@@ -48,9 +61,13 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
     end
   end
 
-  ## Generate a tuple {data, size} of 1's of size size
-  defp generateAll(size) when size >= 0 do
-    {generateOne(0, size), size}
+  ## Generate a tuple {data, size} of values of size size
+  defp generateAll(size, fillWithOne \\ true) when size >= 0 do
+    if fillWithOne do
+      {generateOne(0, size), size}
+    else
+      {0, size}
+    end
   end
 
   ## Generate a tuple {data, size} of 1's of size size by shifting data
