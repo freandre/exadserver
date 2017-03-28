@@ -1,4 +1,9 @@
 defmodule ExAdServer.Bitmap.AdServer do
+  @moduledoc """
+  Implementation of an ad server engine based on sequential set intersection.
+  Finite values are encoded to bitmap integer for performance
+  """
+
   @compile {:parse_transform, :ms_transform}
 
   alias :ets, as: ETS
@@ -46,10 +51,10 @@ defmodule ExAdServer.Bitmap.AdServer do
   ## an empty index registry for not finite values and finally the finite metadata
   ## structure
   def init(targetMetadata) do
-    adsStore = ETS.new(:adsStore, [:set, :protected])
+    ads_store = ETS.new(:adsStore, [:set, :protected])
     indexes = %{}
     metadata = getMetadata(targetMetadata)
-    {:ok, [adsStore: adsStore, indexes: indexes, targetMetadata: metadata]}
+    {:ok, [adsStore: ads_store, indexes: indexes, targetMetadata: metadata]}
   end
 
   ## handle_call callback for :load action, iterate on targeting keys creating
@@ -58,7 +63,7 @@ defmodule ExAdServer.Bitmap.AdServer do
     ETS.insert(state[:adsStore], {adConf["adid"], adConf})
     state = Keyword.put(state, :indexes,
               Enum.reduce(state[:targetMetadata], state[:indexes],
-              fn({indexName, indexProcessor, indexMetaData}, indexes)->
+              fn({indexName, indexProcessor, indexMetaData}, indexes) ->
                 indexProcessor.generateAndStoreIndex(adConf, {indexName, indexMetaData}, indexes)
               end
             ))
@@ -117,36 +122,6 @@ defmodule ExAdServer.Bitmap.AdServer do
   ## Main filtering function, thanks to an accumulator initalized to all ad values,
   ## we iterate on index removing datas from this accumulator
   defp filterRequest(adRequest, indexes, adsStore) do
-    Enum.reduce(adRequest,
-         MapSet.new(ETS.select(adsStore, ETS.fun2ms(fn({adId, _}) -> adId end))),
-         fn({indexName, indexValue}, acc) ->
-           case MapSet.size(acc) do
-             0 -> acc
-             _ -> findInIndex(indexes[indexName], indexValue)
-                  |> MapSet.intersection(acc)
-           end
-         end)
-  end
 
-  ## Look values in an index :  we first filter all inclusive data and remove the
-  ## exluding ones
-  defp findInIndex(etsStore, value) do
-    included = MapSet.new(ETS.select(etsStore,
-                 ETS.fun2ms(fn({{inclusive, storedValue}, id})
-                              when
-                              (inclusive == true and
-                                    (storedValue == "all" or storedValue == value))
-                                or (inclusive == false and storedValue != value)
-                              ->
-                           id
-                 end)))
-    excluded = MapSet.new(ETS.select(etsStore,
-                 ETS.fun2ms(fn({{inclusive, storedValue}, id})
-                              when
-                              inclusive == false and storedValue == value
-                              ->
-                           id
-                 end)))
-    MapSet.difference(included, excluded)
   end
 end

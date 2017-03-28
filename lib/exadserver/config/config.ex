@@ -1,4 +1,8 @@
 defmodule ExAdServer.Config.ConfigServer do
+  @moduledoc """
+  Configuration micro service hiding the real configuration datasource.
+  """
+
   use GenServer
 
   ## Client API
@@ -33,7 +37,7 @@ defmodule ExAdServer.Config.ConfigServer do
   @doc """
   init based on path, this is mainly used for unit testing
   """
-  def init({_path, numberOfAds} = params) when numberOfAds >= 1 do
+  def init({_path, number_of_ads} = params) when number_of_ads >= 1 do
     processor = ExAdServer.Config.UnitTestProcessor
     {:ok, [processor: processor, data: processor.init(params)]}
   end

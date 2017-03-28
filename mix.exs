@@ -36,7 +36,8 @@ defmodule ExAdServer.Mixfile do
     [
       {:poison, "~> 3.0"},
       {:uuid, "~> 1.1" },
-      {:benchfella, "~> 0.3.0"}
+      {:benchfella, "~> 0.3.0"},
+      {:credo, "~> 0.7", only: [:dev, :test]}
     ]
   end
 end

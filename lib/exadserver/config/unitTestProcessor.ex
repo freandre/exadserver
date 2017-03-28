@@ -1,40 +1,46 @@
 defmodule  ExAdServer.Config.UnitTestProcessor do
+  @moduledoc """
+  Mock configuration implementation. It generates a number of config based on
+  metadata.
+  """
+
   @behaviour ExAdServer.Config.BehaviorConfigProcessor
 
   ## Behaviour Callbacks
 
   def init({path, numberOfAds}) do
-    targetingData = File.read!(path)
-                    |> Poison.decode!
+    targeting_data = path
+                     |> File.read!()
+                     |> Poison.decode!
     # generate ads
-    adsMap = 1..numberOfAds
+    ads_map = 1..numberOfAds
             |> Enum.to_list
             |> Enum.reduce(%{},
                            fn(_, acc) ->
-                             targetingObj = generateTargeting(targetingData)
-                             Map.put(acc, targetingObj["adid"], targetingObj)
+                             targeting_obj = generateTargeting(targeting_data)
+                             Map.put(acc, targeting_obj["adid"], targeting_obj)
                            end)
-    targetMetadata = Enum.reduce(targetingData, %{},
+    target_metadata = Enum.reduce(targeting_data, %{},
                                  fn({targetName, values}, acc) ->
                                    Map.put(acc, targetName, prepareMetadata(values))
                                  end)
 
-    [adsMap: adsMap, targetMetadata: targetMetadata]
+    [adsMap: ads_map, targetMetadata: target_metadata]
   end
 
   def getAd(keywordArgs, adId) do
-    adsMap = keywordArgs[:adsMap]
+    ads_map = keywordArgs[:adsMap]
     case adId do
-      :all -> Enum.map(adsMap, fn({_, ad}) -> ad end)
-      _ -> adsMap[adId]
+      :all -> Enum.map(ads_map, fn({_, ad}) -> ad end)
+      _ -> ads_map[adId]
     end
   end
 
   def getMetadata(keywordArgs, targetName) do
-    targetMetadata = keywordArgs[:targetMetadata]
+    target_metadata = keywordArgs[:targetMetadata]
     case targetName do
-      :all -> Map.to_list(targetMetadata)
-      _ -> targetMetadata[targetName]
+      :all -> Map.to_list(target_metadata)
+      _ -> target_metadata[targetName]
     end
   end
 
@@ -45,31 +51,32 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
     #generate a liste of target
     targeting = Enum.reduce(targetsData, %{},
                 fn(targetData, acc) ->
-                  {targetName, targetValue} = generateTarget(targetData)
-                  Map.put(acc, targetName, targetValue)
+                  {target_name, target_value} = generateTarget(targetData)
+                  Map.put(acc, target_name, target_value)
                 end)
     %{"adid" => UUID.uuid1(), "targeting" => targeting}
   end
 
   ## Generate a target object for testing purpose
   defp generateTarget({targetName, targetValues}) do
-    dataList = targetValues["data"]
-    {targetName, %{"inclusive" => :rand.uniform(2) > 1, "data" => generateValueList(dataList)}}
+    data_list = targetValues["data"]
+    {targetName, %{"inclusive" => :rand.uniform(2) > 1, "data" => generateValueList(data_list)}}
   end
 
   # Generate a list of filtering values
   defp generateValueList(dataList) do
-    numberOfValues = :rand.uniform(length(dataList))
-    recGenerateValueList(dataList, numberOfValues, [])
+    number_of_values = :rand.uniform(length(dataList))
+    recGenerateValueList(dataList, number_of_values, [])
   end
 
   # Recursivelyu pick n values values
   defp recGenerateValueList(dataList, numberOfValues, listOfValue) do
-    cond do
-      length(listOfValue) < numberOfValues ->
+      if length(listOfValue) < numberOfValues do
         recGenerateValueList(dataList, numberOfValues, listOfValue ++
                       [Enum.at(dataList, :rand.uniform(length(dataList)) - 1)])
-      true -> listOfValue
+      else
+        listOfValue
+      end
     end
   end
 

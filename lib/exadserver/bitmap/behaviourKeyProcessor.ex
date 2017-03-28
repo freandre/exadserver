@@ -1,10 +1,24 @@
 defmodule  ExAdServer.Config.BehaviorKeysProcessor do
-  ## Prepare an index key or list of key
-  ## The first argument is the ad configuration, the second the index metadata,
-  ## and finally the store registry. It returns the updated registry
+  @moduledoc """
+  Behaviour definition to fix common action for storing and retrieving
+  data in indexes.
+  """
+
+  @doc """
+  Prepare an index key or list of key
+  first argument is the ad configuration
+  second argument is a tuple index name / index metadata
+  third argument is the index registry
+  returns the index registry as index can be added
+  """
   @callback generateAndStoreIndex(Map.t, Tuple.t, Map.t) :: Map.t
 
-  ## Prepare the filter function to use in ets.select. The first argument is the
-  ## indexx name, the second the associated data
-  @callback filterIndex(String.t, any) :: any
+  @doc """
+  Perform a search in an index
+  first argument is a targeting ad
+  second argument a tuple containing the index name and its metadata
+  third argument is the index registry
+  returns a set of matching ad configuration for this index
+  """
+  @callback findInIndex(Map.t, Tuple.t, Map.t) :: MapSet.t
 end

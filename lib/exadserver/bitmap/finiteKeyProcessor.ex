@@ -1,19 +1,29 @@
 defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
-  @behaviour ExAdServer.Config.BehaviorKeysProcessor
-
-  alias :ets, as: ETS
+  @moduledoc """
+  Finite key processor implementation.
+  """
 
   use Bitwise
 
+  @behaviour ExAdServer.Config.BehaviorKeysProcessor
+
+  import ExAdServer.Utils.Storage
+  alias :ets, as: ETS
+
   ## Behaviour Callbacks
   def generateAndStoreIndex(adConf, {indexName, indexMetadata}, indexes) do
-    {store, indexes} = ExAdServer.Utils.Storage.getStore(indexName, indexes)
+    {store, indexes} = getStore(indexName, indexes)
 
     {key, _size} = encodeSingleTarget(adConf["targeting"][indexName],
                                       indexMetadata["distinctvalues"])
 
     ETS.insert(store, {key, adConf["adid"]})
     indexes
+  end
+
+  def findInIndex(ad, {indexName, indexMetadata}, indexes) do
+    #{key, _size} = encodeSingleTarget(ad[indexName], indexMetadata["distinctvalues"])
+
   end
 
   ## Private functions
@@ -23,15 +33,17 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
   defp encodeSingleTarget(targeter, metadata) do
     cond do
     targeter == nil -> generateAll(length(metadata))
-    targeter["data"] == "all" -> generateAll(length(metadata))
+    targeter["data"] == "all" -> metadata
+                                 |> length()
+                                 |> generateAll()
                                  |> excludeIfNeeded(targeter["inclusive"])
-    true -> Enum.reduce(metadata, {0, 0},
-                     fn(val, acc) ->
-                       cond do
-                         val in targeter["data"] -> addOne(acc)
-                         true -> addZero(acc)
-                       end
-                     end)
+    true -> metadata
+            |> Enum.reduce({0, 0},
+                     &(if &1 in targeter["data"] do
+                         addOne(&2)
+                       else
+                         addZero(&2)
+                       end))
             |> excludeIfNeeded(targeter["inclusive"])
     end
   end
