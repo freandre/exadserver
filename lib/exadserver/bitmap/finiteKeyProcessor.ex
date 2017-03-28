@@ -1,4 +1,8 @@
 defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
+  @moduledoc """
+  Finite key processor implementation.
+  """
+
   use Bitwise
 
   @behaviour ExAdServer.Config.BehaviorKeysProcessor
@@ -8,11 +12,16 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
   def getIndexKeyForStorage(adConf, _indexName, indexMetadata) do
     {key, _size} = Enum.reduce(indexMetadata, {0, 0},
                               fn({name, values}, acc) ->
-                                encodeSingleTarget(adConf["targeting"][name],
-                                                   values["distinctvalues"])
+                                adConf["targeting"][name]
+                                |> encodeSingleTarget(values["distinctvalues"])
                                 |> aggregateAccumulators(acc)
                               end)
     {key, adConf["adid"]}
+  end
+
+  def findInIndex(ad, {indexName, indexMetadata}, indexes) do
+    #{key, _size} = encodeSingleTarget(ad[indexName], indexMetadata["distinctvalues"])
+
   end
 
   ## Private functions
@@ -22,15 +31,17 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
   defp encodeSingleTarget(targeter, metadata) do
     cond do
     targeter == nil -> generateAll(length(metadata))
-    targeter["data"] == "all" -> generateAll(length(metadata))
+    targeter["data"] == "all" -> metadata
+                                 |> length()
+                                 |> generateAll()
                                  |> excludeIfNeeded(targeter["inclusive"])
-    true -> Enum.reduce(metadata, {0, 0},
-                     fn(val, acc) ->
-                       cond do
-                         val in targeter["data"] -> addOne(acc)
-                         true -> addZero(acc)
-                       end
-                     end)
+    true -> metadata
+            |> Enum.reduce({0, 0},
+                     &(if &1 in targeter["data"] do
+                         addOne(&2)
+                       else
+                         addZero(&2)
+                       end))
             |> excludeIfNeeded(targeter["inclusive"])
     end
   end

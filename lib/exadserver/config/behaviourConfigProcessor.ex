@@ -1,4 +1,8 @@
 defmodule  ExAdServer.Config.BehaviorConfigProcessor do
+  @moduledoc """
+  Behaviour declaration to fix common action for configuration micro service.
+  """
+
   ## init with a single parameter
   @callback init(any) :: any
 

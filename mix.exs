@@ -37,7 +37,8 @@ defmodule ExAdServer.Mixfile do
       {:poison, "~> 3.0"},
       {:bitmap, git: "https://github.com/freandre/bitmap-elixir.git"},
       {:uuid, "~> 1.1" },
-      {:benchfella, "~> 0.3.0"}
+      {:benchfella, "~> 0.3.0"},
+      {:credo, "~> 0.7", only: [:dev, :test]}
     ]
   end
 end

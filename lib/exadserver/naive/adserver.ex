@@ -1,4 +1,8 @@
 defmodule ExAdServer.Naive.AdServer do
+  @moduledoc """
+  Implementation of anaive ad server engine based on sequential set intersection.
+  """
+
   @compile {:parse_transform, :ms_transform}
 
   alias :ets, as: ETS
@@ -43,9 +47,9 @@ defmodule ExAdServer.Naive.AdServer do
 
   ## init callback, we initialize the main store as well as an empty index registry
   def init(:ok) do
-    adsStore = ETS.new(:adsStore, [:set, :protected])
+    ads_store = ETS.new(:adsStore, [:set, :protected])
     indexes = %{}
-    {:ok, [adsStore: adsStore, indexes: indexes]}
+    {:ok, [adsStore: ads_store, indexes: indexes]}
   end
 
   ## handle_call callback for :load action, iterate on targeting keys creating
@@ -82,10 +86,10 @@ defmodule ExAdServer.Naive.AdServer do
   ## Return a a store based on index name, instanciate it if it does not exists
   ## thus needing to return also the registry of stores
   defp getStore(indexName, indexes) do
-    if !Map.has_key?(indexes, indexName) do
+    if Map.has_key?(indexes, indexName) == false do
       store = ETS.new(String.to_atom(indexName), [:bag, :protected])
-      newIndexes = Map.put(indexes, indexName, store)
-      {store, newIndexes}
+      new_indexes = Map.put(indexes, indexName, store)
+      {store, new_indexes}
     else
       {indexes[indexName], indexes}
     end
@@ -101,7 +105,7 @@ defmodule ExAdServer.Naive.AdServer do
   ## Validate that a filtering request provides a set of know targets
   defp validateRequest(adRequest, indexes) do
     answer = adRequest
-             |> Enum.filter(fn({ixName, _}) -> !Map.has_key?(indexes, ixName) end)
+             |> Enum.filter(fn({ixName, _}) -> Map.has_key?(indexes, ixName) == false end)
              |> Enum.map(fn({ixName, _}) -> ixName end)
              |> Enum.reduce("", fn(ixName, acc) -> acc <> ixName end)
 
@@ -119,31 +123,11 @@ defmodule ExAdServer.Naive.AdServer do
          fn({indexName, indexValue}, acc) ->
            case MapSet.size(acc) do
              0 -> acc
-             _ -> findInIndex(indexes[indexName], indexValue)
+             _ -> indexes[indexName]
+                  |> findInIndex(indexValue)
                   |> MapSet.intersection(acc)
            end
          end)
   end
 
-  ## Look values in an index :  we first filter all inclusive data and remove the
-  ## exluding ones
-  defp findInIndex(etsStore, value) do
-    included = MapSet.new(ETS.select(etsStore,
-                 ETS.fun2ms(fn({{inclusive, storedValue}, id})
-                              when
-                              (inclusive == true and
-                                    (storedValue == "all" or storedValue == value))
-                                or (inclusive == false and storedValue != value)
-                              ->
-                           id
-                 end)))
-    excluded = MapSet.new(ETS.select(etsStore,
-                 ETS.fun2ms(fn({{inclusive, storedValue}, id})
-                              when
-                              inclusive == false and storedValue == value
-                              ->
-                           id
-                 end)))
-    MapSet.difference(included, excluded)
-  end
 end
