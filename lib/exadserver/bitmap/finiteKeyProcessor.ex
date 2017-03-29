@@ -25,14 +25,14 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
   def findInIndex(ad, {indexName, indexMetadata}, indexes) do
     {store, _indexes} = getStore(indexName, indexes)
 
-    {key, _size} = encodeSingleTarget(ad[indexName],
-                                      indexMetadata["distinctvalues"],
-                                      false)
+    {key, _size} = encodeKey(ad[indexName],
+                             indexMetadata["distinctvalues"])
+
     MapSet.new(ETS.select(store,
                           ETS.fun2ms(fn({stored_key, id})
                               when
                                 ((stored_key &&& key) == key)
-                                or ((stored_key ||| key) == 0)
+                                or ((stored_key ||| key) == stored_key)
                               ->
                                 id
                               end)))
@@ -41,14 +41,14 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
   ## Private functions
 
   ## Encode a single target, the first argument is one of the targeting attribute
-  ## the second the associated distinct values for this attribute the last indicates
+  ## the second the associated distinct values for this attribute, the last indicates
   ## the behavior if targeter is unknown
-  defp encodeSingleTarget(targeter, metadata, fillWithOne \\ true) do
+  defp encodeSingleTarget(targeter, metadata) do    
     cond do
-    targeter == nil -> generateAll(length(metadata), fillWithOne)
-    targeter["data"] == "all" -> metadata
+    targeter == nil -> generateAllWithOne(length(metadata))
+    targeter["data"] == ["all"] -> metadata
                                  |> length()
-                                 |> generateAll()
+                                 |> generateAllWithOne()
                                  |> excludeIfNeeded(targeter["inclusive"])
     true -> metadata
             |> Enum.reduce({0, 0},
@@ -61,8 +61,34 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
     end
   end
 
-  ## Generate a tuple {data, size} of values of size size
-  defp generateAll(size, fillWithOne \\ true) when size >= 0 do
+  ## Generate a key from ad value, the first argument is the ad value to encode
+  ## the second the associated distinct values for this attribute
+  defp encodeKey(adValue, metadata) do
+    if adValue == nil do
+      generateAllWithZero(length(metadata))
+    else
+      Enum.reduce(metadata, {0, 0},
+                  &(if &1 == adValue do
+                      addOne(&2)
+                    else
+                      addZero(&2)
+                    end))
+    end
+  end
+
+  ## Generate a tuple {data, size} of values of size size with 1
+  defp generateAllWithOne(size) when size >= 0 do
+    generateAll(size, true)
+  end
+
+  ## Generate a tuple {data, size} of values of size size with 0
+  defp generateAllWithZero(size) when size >= 0 do
+    generateAll(size, false)
+  end
+
+  ## Generate a tuple {data, size} of values of size size with 1 if fillWithOne
+  ## is true, 0 else
+  defp generateAll(size, fillWithOne) when size >= 0 do
     if fillWithOne do
       {generateOne(0, size), size}
     else

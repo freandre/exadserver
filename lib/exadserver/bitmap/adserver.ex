@@ -1,7 +1,7 @@
 defmodule ExAdServer.Bitmap.AdServer do
   @moduledoc """
   Implementation of an ad server engine based on sequential set intersection.
-  Finite values are encoded to bitmap integer for performance
+  Finite values are encoded to bitmap integer for performance in ets store retrieval
   """
 
   alias :ets, as: ETS
@@ -80,15 +80,15 @@ defmodule ExAdServer.Bitmap.AdServer do
   def handle_call({:filter, adRequest}, _from, state) do
     indexes = state[:indexes]
     target_metadata = state[:targetMetadata]
-    ret = Enum.reduce(target_metadata,
+    ret = Enum.reduce_while(target_metadata, :first,
                     fn({indexName, indexProcessor, indexMetaData}, acc) ->
                       set = indexProcessor.findInIndex(adRequest,
                                         {indexName, indexMetaData}, indexes)
-
-                      if List.first(target_metadata) == acc do
-                        set
-                      else
-                        MapSet.intersection(set, acc)
+                      cond do
+                        :first == acc and MapSet.size(set) == 0 -> {:halt, set}
+                        :first == acc and MapSet.size(set) != 0 -> {:cont, set}
+                        :first != acc and MapSet.size(set) == 0 -> {:halt, set}
+                        :first != acc and MapSet.size(set) != 0 -> {:cont, MapSet.intersection(set, acc)}
                       end
                     end)
     {:reply, ret, state}

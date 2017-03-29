@@ -22,7 +22,7 @@ defmodule ExAdServer.Bitmap.InfiniteKeyProcessor do
   end
 
   def findInIndex(ad, {indexName, _indexMetadata}, indexes) do
-    store = getStore(indexName, indexes)
+    {store, _indexes} = getStore(indexName, indexes)
     value = ad[indexName]
 
     included = MapSet.new(ETS.select(store,
