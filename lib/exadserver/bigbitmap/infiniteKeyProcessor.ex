@@ -1,10 +1,10 @@
-defmodule ExAdServer.Bitmap.InfiniteKeyProcessor do
+defmodule ExAdServer.BigBitmap.InfiniteKeyProcessor do
   @moduledoc """
   Infinite key processor implementation.
   """
   @compile {:parse_transform, :ms_transform}
 
-  @behaviour ExAdServer.Bitmap.BehaviorKeysProcessor
+  @behaviour ExAdServer.BigBitmap.BehaviorKeysProcessor
 
   import ExAdServer.Utils.Storage
   alias :ets, as: ETS

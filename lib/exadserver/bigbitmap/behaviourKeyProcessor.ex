@@ -1,4 +1,4 @@
-defmodule  ExAdServer.Bitmap.BehaviorKeysProcessor do
+defmodule  ExAdServer.BigBitmap.BehaviorKeysProcessor do
   @moduledoc """
   Behaviour definition to fix common action for storing and retrieving
   data in indexes.

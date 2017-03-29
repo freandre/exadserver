@@ -1,4 +1,4 @@
-defmodule ExAdServer.Bitmap.AdServer do
+defmodule ExAdServer.BigBitmap.AdServer do
   @moduledoc """
   Implementation of an ad server engine based on sequential set intersection.
   Finite values are encoded to bitmap integer for performance in ets store retrieval

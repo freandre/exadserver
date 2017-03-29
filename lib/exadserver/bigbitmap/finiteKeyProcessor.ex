@@ -1,4 +1,4 @@
-defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
+defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
   @moduledoc """
   Finite key processor implementation.
   """
@@ -6,7 +6,7 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
 
   use Bitwise
 
-  @behaviour ExAdServer.Bitmap.BehaviorKeysProcessor
+  @behaviour ExAdServer.BigBitmap.BehaviorKeysProcessor
 
   import ExAdServer.Utils.Storage
   alias :ets, as: ETS

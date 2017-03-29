@@ -77,8 +77,9 @@ defmodule ExAdServer.Naive.AdServer do
   def handle_call({:filter, adRequest}, _from, state) do
     indexes = state[:indexes]
 
-    case validateRequest(adRequest, indexes) do
-      :ok -> {:reply, filterRequest(adRequest, indexes, state[:adsStore]), state}
+    with :ok <- validateRequest(adRequest, indexes) do
+      {:reply, filterRequest(adRequest, indexes, state[:adsStore]), state}
+    else
       reason -> {:reply, {:badArgument, reason}, state}
     end
   end
