@@ -11,14 +11,8 @@ defmodule ExAdServer.BigBitmap.InfiniteKeyProcessor do
 
   ## Behaviour Callbacks
 
-  def generateAndStoreIndex(adConf, {indexName, _indexMetadata}, indexes) do
-    {store, indexes} = getStore(indexName, indexes)
-
-    targeter = adConf["targeting"][indexName]["data"]
-    inclusive = adConf["targeting"][indexName]["inclusive"]
-
-    ETS.insert(store, Enum.map(targeter, &({{inclusive, &1}, adConf["adid"]})))
-    indexes
+  def generateAndStoreIndex(_adConf, {indexName, _indexMetadata}, indexes) do
+    Map.put(indexes, indexName, nil)
   end
 
   def findInIndex(adRequest, {indexName, _indexMetadata}, indexes, accumulator) do
