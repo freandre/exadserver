@@ -50,15 +50,15 @@ defmodule ExAdServer.BigBitmap.AdServer do
   ## structure
   def init(targetMetadata) do
     ads_store = ETS.new(:adsStore, [:set, :protected])
-    indexes = %{}
+    indexes = %{"adsStore" => ads_store}
     metadata = getMetadata(targetMetadata)
-    {:ok, [adsStore: ads_store, indexes: indexes, targetMetadata: metadata]}
+    {:ok, [indexes: indexes, targetMetadata: metadata]}
   end
 
   ## handle_call callback for :load action, iterate on targeting keys creating
   ## an index for each
   def handle_call({:load, adConf}, _from, state) do
-    ETS.insert(state[:adsStore], {adConf["adid"], adConf})
+    ETS.insert(state[:indexes]["adsStore"], {adConf["adid"], adConf})
     state = Keyword.put(state, :indexes,
               Enum.reduce(state[:targetMetadata], state[:indexes],
               fn({indexName, indexProcessor, indexMetaData}, indexes) ->
@@ -69,7 +69,7 @@ defmodule ExAdServer.BigBitmap.AdServer do
 
   ## handle_call callback for :getAd, perform a lookup on main  ad table
   def handle_call({:getAd, adId}, _from, state) do
-    case ETS.lookup(state[:adsStore], adId) do
+    case ETS.lookup(state[:indexes]["adsStore"], adId) do
       [] -> {:reply, :notfound, state}
       [{^adId, ad}] -> {:reply, ad, state}
     end
@@ -85,12 +85,12 @@ defmodule ExAdServer.BigBitmap.AdServer do
       ret = Enum.reduce_while(target_metadata, :first,
                       fn({indexName, indexProcessor, indexMetaData}, acc) ->
                         set = indexProcessor.findInIndex(adRequest,
-                                          {indexName, indexMetaData}, indexes)
-                        cond do
-                          :first == acc and MapSet.size(set) == 0 -> {:halt, set}
-                          :first == acc and MapSet.size(set) != 0 -> {:cont, set}
-                          :first != acc and MapSet.size(set) == 0 -> {:halt, set}
-                          :first != acc and MapSet.size(set) != 0 -> {:cont, MapSet.intersection(set, acc)}
+                                          {indexName, indexMetaData}, indexes, acc)
+                                        
+                        if MapSet.size(set) == 0 do
+                          {:halt, set}
+                        else
+                          {:cont, set}
                         end
                       end)
       {:reply, ret, state}
@@ -108,9 +108,10 @@ defmodule ExAdServer.BigBitmap.AdServer do
     {finite, infinite, geo} = Enum.reduce(targetMetadata, {[], [], []},
                 fn({k, v}, {finite, infinite, geo}) ->
                   case v["type"] do
-                    "finite" -> {[{k, ExAdServer.Bitmap.FiniteKeyProcessor, v} | finite], infinite, geo}
-                    "infinite" -> {finite, [{k, ExAdServer.Bitmap.InfiniteKeyProcessor, v} | infinite], geo}
-                    "geo" -> {finite, infinite, [{k, ExAdServer.Bitmap.GeoKeyProcessor, v} | geo]}
+                    "finite" -> {[{k, ExAdServer.BigBitmap.FiniteKeyProcessor, v} | finite], infinite, geo}
+                    _ -> {finite, [{k, ExAdServer.BigBitmap.InfiniteKeyProcessor, v} | infinite], geo}
+                    #"infinite" -> {finite, [{k, ExAdServer.BigBitmap.InfiniteKeyProcessor, v} | infinite], geo}
+                    #"geo" -> {finite, infinite, [{k, ExAdServer.BigBitmap.GeoKeyProcessor, v} | geo]}
                   end
                 end)
     finite ++ infinite ++ geo

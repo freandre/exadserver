@@ -1,4 +1,4 @@
-defmodule ExAdServer.Bitmap.GeoKeyProcessor do
+defmodule ExAdServer.BigBitmap.GeoKeyProcessor do
   @moduledoc """
   Geo key processor implementation.
   """

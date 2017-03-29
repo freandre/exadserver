@@ -18,7 +18,8 @@ defmodule  ExAdServer.BigBitmap.BehaviorKeysProcessor do
   first argument is a targeting ad
   second argument a tuple containing the index name and its metadata
   third argument is the index registry
+  fourth argument is a MapSet accumulator
   returns a set of matching ad configuration for this index
   """
-  @callback findInIndex(Map.t, Tuple.t, Map.t) :: MapSet.t
+  @callback findInIndex(Map.t, Tuple.t, Map.t, MapSet.t) :: MapSet.t
 end

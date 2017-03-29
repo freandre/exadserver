@@ -21,26 +21,21 @@ defmodule ExAdServer.BigBitmap.InfiniteKeyProcessor do
     indexes
   end
 
-  def findInIndex(ad, {indexName, _indexMetadata}, indexes) do
-    {store, _indexes} = getStore(indexName, indexes)
-    value = ad[indexName]
+  def findInIndex(adRequest, {indexName, _indexMetadata}, indexes, accumulator) do
+    {ads_store, _indexes} = getStore("adsStore", indexes)
 
-    included = MapSet.new(ETS.select(store,
-                 ETS.fun2ms(fn({{inclusive, storedValue}, id})
-                              when
-                              (inclusive == true and
-                                    (storedValue == "all" or storedValue == value))
-                                or (inclusive == false and storedValue != value)
-                              ->
-                           id
-                 end)))
-    excluded = MapSet.new(ETS.select(store,
-                 ETS.fun2ms(fn({{inclusive, storedValue}, id})
-                              when
-                              inclusive == false and storedValue == value
-                              ->
-                           id
-                 end)))
-    MapSet.difference(included, excluded)
+    Enum.reduce(accumulator, MapSet.new,
+                fn(ad_id, acc) ->
+                  [{^ad_id, ad_conf}] = ETS.lookup(ads_store, ad_id)
+                    conf_values = ad_conf["targeting"][indexName]
+                    conf_inclusive = conf_values["inclusive"]
+                    conf_data = conf_values["data"]
+
+                    if conf_inclusive == false and adRequest[indexName] in conf_data do
+                      acc
+                    else
+                      MapSet.put(acc, ad_id)
+                    end
+                end)
   end
 end

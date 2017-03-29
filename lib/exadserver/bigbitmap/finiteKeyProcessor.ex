@@ -22,13 +22,13 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
     indexes
   end
 
-  def findInIndex(ad, {indexName, indexMetadata}, indexes) do
+  def findInIndex(ad, {indexName, indexMetadata}, indexes, accumulator) do
     {store, _indexes} = getStore(indexName, indexes)
 
     {key, _size} = encodeKey(ad[indexName],
                              indexMetadata["distinctvalues"])
 
-    MapSet.new(ETS.select(store,
+    ret = MapSet.new(ETS.select(store,
                           ETS.fun2ms(fn({stored_key, id})
                               when
                                 ((stored_key &&& key) == key)
@@ -36,6 +36,11 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
                               ->
                                 id
                               end)))
+    if accumulator == :first do
+      ret
+    else
+      MapSet.intersection(accumulator, ret)
+    end
   end
 
   ## Private functions
