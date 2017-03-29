@@ -86,7 +86,7 @@ defmodule ExAdServer.BigBitmap.AdServer do
                       fn({indexName, indexProcessor, indexMetaData}, acc) ->
                         set = indexProcessor.findInIndex(adRequest,
                                           {indexName, indexMetaData}, indexes, acc)
-                                        
+
                         if MapSet.size(set) == 0 do
                           {:halt, set}
                         else
@@ -109,9 +109,8 @@ defmodule ExAdServer.BigBitmap.AdServer do
                 fn({k, v}, {finite, infinite, geo}) ->
                   case v["type"] do
                     "finite" -> {[{k, ExAdServer.BigBitmap.FiniteKeyProcessor, v} | finite], infinite, geo}
-                    _ -> {finite, [{k, ExAdServer.BigBitmap.InfiniteKeyProcessor, v} | infinite], geo}
-                    #"infinite" -> {finite, [{k, ExAdServer.BigBitmap.InfiniteKeyProcessor, v} | infinite], geo}
-                    #"geo" -> {finite, infinite, [{k, ExAdServer.BigBitmap.GeoKeyProcessor, v} | geo]}
+                    "infinite" -> {finite, [{k, ExAdServer.BigBitmap.InfiniteKeyProcessor, v} | infinite], geo}
+                    "geo" -> {finite, infinite, [{k, ExAdServer.BigBitmap.GeoKeyProcessor, v} | geo]}
                   end
                 end)
     finite ++ infinite ++ geo
