@@ -79,15 +79,19 @@ defmodule ExAdServer.Bitmap.AdServer do
   ## targeting request
   def handle_call({:filter, adRequest}, _from, state) do
     indexes = state[:indexes]
-    Enum.reduce(state[:targetMetadata],
+    target_metadata = state[:targetMetadata]
+    ret = Enum.reduce(target_metadata,
                     fn({indexName, indexProcessor, indexMetaData}, acc) ->
-                      #indexProcessor.findInIndex(adRequest,
-                                        #{indexName, indexMetaData}, indexes)
+                      set = indexProcessor.findInIndex(adRequest,
+                                        {indexName, indexMetaData}, indexes)
 
-                      #TODO pour determiner la premiere iteration, acc == first element de metadata
-                                        IO.puts(inspect(acc))
-                                        acc
+                      if List.first(target_metadata) == acc do
+                        set
+                      else
+                        MapSet.intersection(set, acc)
+                      end
                     end)
+    {:reply, ret, state}
   end
 
   ## Private functions
