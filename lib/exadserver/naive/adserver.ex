@@ -109,16 +109,23 @@ defmodule ExAdServer.Naive.AdServer do
   ## Main filtering function, thanks to an accumulator initalized to all ad values,
   ## we iterate on index removing datas from this accumulator
   defp filterRequest(adRequest, indexes, adsStore) do
-    Enum.reduce(adRequest,
-         MapSet.new(ETS.select(adsStore, ETS.fun2ms(fn({adId, _}) -> adId end))),
-         fn({indexName, indexValue}, acc) ->
-           case MapSet.size(acc) do
-             0 -> acc
-             _ -> indexes[indexName]
-                  |> findInIndex(indexValue)
-                  |> MapSet.intersection(acc)
-           end
-         end)
+    IO.puts("Request:")
+    IO.puts(inspect(adRequest))
+
+    Enum.reduce(indexes,
+                MapSet.new(ETS.select(adsStore, ETS.fun2ms(fn({adId, _}) -> adId end))),
+                fn({indexName, indexStore}, acc) ->
+                  IO.puts(indexName)
+                  IO.puts("Accumulator at the begining:")
+                  IO.puts(inspect(acc))
+                  IO.puts("============")
+                  case MapSet.size(acc) do
+                    0 -> acc
+                    _ -> indexStore
+                         |> findInIndex(adRequest[indexName])
+                         |> MapSet.intersection(acc)
+                   end
+                end)
   end
 
   ## Look values in an index :  we first filter all inclusive data and remove the
@@ -140,6 +147,9 @@ defmodule ExAdServer.Naive.AdServer do
                             ->
                          id
                end)))
-    MapSet.difference(included, excluded)
+    val = MapSet.difference(included, excluded)
+    IO.puts("Index returns:")
+    IO.puts(inspect(val))
+    val
   end
 end

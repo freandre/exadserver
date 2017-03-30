@@ -90,4 +90,60 @@
             "inclusive": true
         }
     }
+}, {
+    "adid": 564337,
+    "targeting": {
+        "language": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        },
+        "country": {
+            "data": [
+                "RU"
+            ],
+            "inclusive": false
+        },
+        "support": {
+            "data": [
+                "leroy.merlin"
+            ],
+            "inclusive": true
+        },
+        "geo": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        }
+    }
+}, {
+    "adid": 564338,
+    "targeting": {
+        "language": {
+            "data": [
+                "all"
+            ],
+            "inclusive": false
+        },
+        "country": {
+            "data": [
+                "RU"
+            ],
+            "inclusive": false
+        },
+        "support": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        },
+        "geo": {
+            "data": [
+                "all"
+            ],
+            "inclusive": true
+        }
+    }
 }]

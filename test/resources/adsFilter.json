@@ -5,8 +5,16 @@
             "support": "leroy.merlin",
             "geo": ""
         },
-        "expected": []
+        "expected": [564337]
     },
+    {
+            "request": {
+                "country": "PL",
+                "support": "leroy.merlin",
+                "geo": ""
+            },
+            "expected": [564337]
+        },
     {
         "request": {
             "language": "pl",
@@ -31,6 +39,14 @@
             "country": "FR",
             "support": "fr.two4tea",
             "geo": ""
+        },
+        "expected": [564334, 564335]
+    },
+    {
+        "request": {
+            "language": "fr",
+            "country": "FR",
+            "support": "fr.two4tea"
         },
         "expected": [564334, 564335]
     }

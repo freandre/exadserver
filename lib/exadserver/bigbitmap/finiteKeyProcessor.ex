@@ -30,6 +30,7 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
   def findInIndex(ad, {indexName, indexMetadata}, indexes, accumulator) do
     {store, _indexes} = getStore(indexName, indexes)
 
+    #TODO implement encode  / aggregate
     {key, _size} = encodeKey(ad[indexName],
                              indexMetadata["distinctvalues"])
 
