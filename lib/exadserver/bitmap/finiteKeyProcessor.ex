@@ -9,6 +9,7 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
   @behaviour ExAdServer.Bitmap.BehaviorKeysProcessor
 
   import ExAdServer.Utils.Storage
+  import ExAdServer.Utils.BitUtils
   alias :ets, as: ETS
 
   ## Behaviour Callbacks
@@ -74,51 +75,5 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
                       addZero(&2)
                     end))
     end
-  end
-
-  ## Generate a tuple {data, size} of values of size size with 1
-  defp generateAllWithOne(size) when size >= 0 do
-    generateAll(size, true)
-  end
-
-  ## Generate a tuple {data, size} of values of size size with 0
-  defp generateAllWithZero(size) when size >= 0 do
-    generateAll(size, false)
-  end
-
-  ## Generate a tuple {data, size} of values of size size with 1 if fillWithOne
-  ## is true, 0 else
-  defp generateAll(size, fillWithOne) when size >= 0 do
-    if fillWithOne do
-      {generateOne(0, size), size}
-    else
-      {0, size}
-    end
-  end
-
-  ## Generate a tuple {data, size} of 1's of size size by shifting data
-  defp generateOne(data, size) do
-    case size do
-      0 -> data
-      _ -> generateOne((data <<< 1) ||| 1, size - 1)
-    end
-  end
-
-  ## Negate the data of the tuple is inclusive is false
-  defp excludeIfNeeded({data, size} = value, inclusive) do
-    case inclusive do
-      false -> {~~~data, size}
-      _ -> value
-    end
-  end
-
-  ## Add a 1 bit
-  defp addOne({data, size}) do
-    {(data <<< 1) ||| 1, size + 1}
-  end
-
-  ## Add a 0 bit
-  defp addZero({data, size}) do
-    {(data <<< 1), size + 1}
   end
 end
