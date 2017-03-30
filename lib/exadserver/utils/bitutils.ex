@@ -58,7 +58,7 @@ defmodule ExAdServer.Utils.BitUtils do
     #IO.puts(inspect(Integer.digits(value, 2)))
     if bit == 1 do
       #IO.puts(inspect(Integer.digits(value ||| (bit <<< position), 2)))
-      {value ||| (bit <<< position), size}
+      {value ||| (1 <<< position), size}
     else
       #IO.puts(inspect(Integer.digits(value &&& ~~~(1 <<< position), 2)))
       {value &&& ~~~(1 <<< position), size}
