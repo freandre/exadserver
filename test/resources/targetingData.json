@@ -2,7 +2,6 @@
    "country":{
       "type":"finite",
       "data":[
-         "all",
          "AF",
          "ZA",
          "AX",
@@ -257,7 +256,6 @@
    "language":{
       "type":"finite",
       "data":[
-         "all",
          "aa",
          "ab",
          "ae",
@@ -562,7 +560,6 @@
    "iab":{
       "type":"finite",
       "data":[
-         "all",
          "IAB1-2",
          "IAB1-3",
          "IAB1-4",
