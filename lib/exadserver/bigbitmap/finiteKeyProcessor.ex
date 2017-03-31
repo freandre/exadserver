@@ -37,7 +37,17 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
                   |> aggregateAccumulators(acc)
                 end)
 
-    # TODO remplacer par foldl
+    # foldl seems slower finally
+    #ret = ETS.foldl(
+    #          fn({stored_key, id}, acc) ->
+    #            if ((stored_key &&& key) == key) do
+    #              MapSet.put(acc, id)
+    #            else
+    #              acc
+    #            end
+    #          end,
+    #          MapSet.new, store)
+
     ret = MapSet.new(ETS.select(store,
                           ETS.fun2ms(fn({stored_key, id})
                               when
@@ -45,6 +55,8 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
                               ->
                                 id
                               end)))
+
+
     if accumulator == :first do
       ret
     else
@@ -57,7 +69,7 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
   ## Encode a single target, the first argument is one of the targeting attribute
   ## the second the associated distinct values for this attribute, the last indicates
   ## the behavior if targeter is unknown
-  defp encodeSingleTarget(targeter, metadata) do    
+  defp encodeSingleTarget(targeter, metadata) do
     inclusive = targeter["inclusive"]
     cond do
       # +1 for unknown value
