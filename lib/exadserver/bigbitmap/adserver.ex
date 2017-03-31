@@ -81,22 +81,18 @@ defmodule ExAdServer.BigBitmap.AdServer do
     indexes = state[:indexes]
     target_metadata = state[:targetMetadata]
 
-    with :ok <- validateRequest(adRequest, indexes) do
-      ret = Enum.reduce_while(target_metadata, :first,
-                      fn({indexName, indexProcessor, indexMetaData}, acc) ->
-                        set = indexProcessor.findInIndex(adRequest,
-                                          {indexName, indexMetaData}, indexes, acc)
+    ret = Enum.reduce_while(target_metadata, :first,
+                    fn({indexName, indexProcessor, indexMetaData}, acc) ->
+                      set = indexProcessor.findInIndex(adRequest,
+                                        {indexName, indexMetaData}, indexes, acc)
 
-                        if MapSet.size(set) == 0 do
-                          {:halt, set}
-                        else
-                          {:cont, set}
-                        end
-                      end)
-      {:reply, ret, state}
-    else
-      reason -> {:reply, {:badArgument, reason}, state}
-    end
+                      if MapSet.size(set) == 0 do
+                        {:halt, set}
+                      else
+                        {:cont, set}
+                      end
+                    end)
+    {:reply, ret, state}
   end
 
   ## Private functions
@@ -119,18 +115,5 @@ defmodule ExAdServer.BigBitmap.AdServer do
                   {k_to_add, v_to_add}
                 end)
     [{"finite", ExAdServer.BigBitmap.FiniteKeyProcessor, finite_list} | infinite] ++ geo
-  end
-
-  ## Validate that a filtering request provides a set of know targets
-  defp validateRequest(adRequest, indexes) do
-    answer = adRequest
-             |> Enum.filter(fn({ixName, _}) -> !Map.has_key?(indexes, ixName) end)
-             |> Enum.map(fn({ixName, _}) -> ixName end)
-             |> Enum.reduce("", fn(ixName, acc) -> acc <> ixName end)
-
-    case answer do
-      "" -> :ok
-      _ -> "The following target attributes are not available: " <> answer
-    end
   end
 end

@@ -51,6 +51,20 @@ defmodule ExAdServer.Utils.BitUtils do
     {(firstData <<< secSize) ||| secData, firstSize + secSize}
   end
 
+  @doc """
+    Put a specific bit at position
+  """
+  def setBitAt({value, size}, bit, position) do
+    #IO.puts(inspect(Integer.digits(value, 2)))
+    if bit == 1 do
+      #IO.puts(inspect(Integer.digits(value ||| (bit <<< position), 2)))
+      {value ||| (1 <<< position), size}
+    else
+      #IO.puts(inspect(Integer.digits(value &&& ~~~(1 <<< position), 2)))
+      {value &&& ~~~(1 <<< position), size}
+    end
+  end
+
   ## Private functions
 
   ## Generate a tuple {data, size} of values of size size with 1 if fillWithOne

@@ -27,12 +27,15 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
     indexes
   end
 
-  def findInIndex(ad, {indexName, indexMetadata}, indexes, accumulator) do
-    {store, _indexes} = getStore(indexName, indexes)
+  def findInIndex(ad, {_, finiteMetadata}, indexes, accumulator) do
+    {store, _indexes} = getStore("finite", indexes)
 
-    #TODO implement encode  / aggregate
-    {key, _size} = encodeKey(ad[indexName],
+    {key, _size} = Enum.reduce(finiteMetadata, {0, 0},
+                fn ({indexName, indexMetadata}, acc) ->
+                  encodeKey(ad[indexName],
                              indexMetadata["distinctvalues"])
+                  |> aggregateAccumulators(acc)
+                end)
 
     ret = MapSet.new(ETS.select(store,
                           ETS.fun2ms(fn({stored_key, id})
@@ -56,19 +59,23 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
   defp encodeSingleTarget(targeter, metadata) do
     cond do
       # +1 for unknown value
+      # let s fix the "unknown value" at the very begining of the bit field
     targeter == nil -> generateAllWithOne(length(metadata) + 1)
-    targeter["data"] == ["all"] -> metadata
-                                 |> length()
+    targeter["data"] == ["all"] -> length(metadata) + 1
                                  |> generateAllWithOne()
                                  |> excludeIfNeeded(targeter["inclusive"])
+                                 |> setBitAt(targeter["inclusive"] == false,
+                                             length(metadata) + 1)
     true -> metadata
-            |> Enum.reduce({0, 0},
+            |> Enum.reduce({0, 1}, # not unknown so 0 at index 1
                      &(if &1 in targeter["data"] do
                          addOne(&2)
                        else
                          addZero(&2)
                        end))
             |> excludeIfNeeded(targeter["inclusive"])
+            |> setBitAt(targeter["inclusive"] == false,
+                        length(metadata) + 1)
     end
   end
 
@@ -76,9 +83,9 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
   ## the second the associated distinct values for this attribute
   defp encodeKey(adValue, metadata) do
     if adValue == nil do
-      generateAllWithZero(length(metadata))
+      {1 <<< length(metadata), length(metadata) + 1}
     else
-      Enum.reduce(metadata, {0, 0},
+      Enum.reduce(metadata, {0, 1},
                   &(if &1 == adValue do
                       addOne(&2)
                     else

@@ -66,10 +66,14 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
   # Generate a list of filtering values
   defp generateValueList(dataList) do
     number_of_values = :rand.uniform(length(dataList))
-    recGenerateValueList(dataList, number_of_values, [])
+    if :rand.uniform(100) > 75 do
+      ["all"]
+    else
+      recGenerateValueList(dataList, number_of_values, [])
+    end
   end
 
-  # Recursivelyu pick n values values
+  # Recursively pick n values values
   defp recGenerateValueList(dataList, numberOfValues, listOfValue) do
       if length(listOfValue) < numberOfValues do
         recGenerateValueList(dataList, numberOfValues, listOfValue ++
