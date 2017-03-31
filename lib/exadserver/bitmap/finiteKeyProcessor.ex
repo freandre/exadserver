@@ -45,12 +45,14 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
   ## the second the associated distinct values for this attribute, the last indicates
   ## the behavior if targeter is unknown
   defp encodeSingleTarget(targeter, metadata) do
+    inclusive = targeter["inclusive"]
     cond do
     targeter == nil -> generateAllWithOne(length(metadata))
     targeter["data"] == ["all"] -> metadata
                                  |> length()
                                  |> generateAllWithOne()
-                                 |> excludeIfNeeded(targeter["inclusive"])
+                                 |> conditionalNot(inclusive == false)
+                                 
     true -> metadata
             |> Enum.reduce({0, 0},
                      &(if &1 in targeter["data"] do
@@ -58,7 +60,7 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
                        else
                          addZero(&2)
                        end))
-            |> excludeIfNeeded(targeter["inclusive"])
+            |> conditionalNot(inclusive == false)
     end
   end
 

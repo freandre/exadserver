@@ -18,6 +18,8 @@ defmodule ExAdServer.BigBitmap.InfiniteKeyProcessor do
   def findInIndex(adRequest, {indexName, _indexMetadata}, indexes, accumulator) do
     {ads_store, _indexes} = getStore("adsStore", indexes)
 
+    # here the id is to copy matching id in the new accumulator, not delete from
+    # the original
     Enum.reduce(accumulator, MapSet.new,
                 fn(ad_id, acc) ->
                   [{^ad_id, ad_conf}] = ETS.lookup(ads_store, ad_id)
@@ -25,10 +27,14 @@ defmodule ExAdServer.BigBitmap.InfiniteKeyProcessor do
                     conf_inclusive = conf_values["inclusive"]
                     conf_data = conf_values["data"]
 
-                    if conf_inclusive == false and adRequest[indexName] in conf_data do
-                      acc
-                    else
-                      MapSet.put(acc, ad_id)
+                    cond do
+                      conf_inclusive == true and adRequest[indexName] in conf_data
+                              -> MapSet.put(acc, ad_id)
+                      conf_inclusive == true and conf_data == ["all"]
+                              -> MapSet.put(acc, ad_id)
+                      conf_inclusive == false and (adRequest[indexName] in conf_data) == false
+                              -> MapSet.put(acc, ad_id)
+                      true -> acc
                     end
                 end)
   end

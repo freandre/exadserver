@@ -4,7 +4,7 @@ defmodule ConfigServerTest do
 
   test "UnitTestConfig init" do
     number = 10
-    {:ok, configserver} = ConfigServer.start_link({"./test/resources/targetingData.json", number})
+    {:ok, configserver} = ConfigServer.start_link({"./test/resources/simpleTargetingData.json", number})
     returned = length(ConfigServer.getAd(configserver))
     assert(returned == number,
           """
@@ -18,7 +18,7 @@ defmodule ConfigServerTest do
 
   test "UnitTestConfig MetaData" do
     number = 1
-    {:ok, configserver} = ConfigServer.start_link({"./test/resources/targetingData.json", number})
+    {:ok, configserver} = ConfigServer.start_link({"./test/resources/simpleTargetingData.json", number})
     returned = ConfigServer.getMetadata(configserver, "support")
     assert(returned["distinctvalues"] == nil,
           """

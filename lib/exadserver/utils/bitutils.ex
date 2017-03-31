@@ -13,6 +13,13 @@ defmodule ExAdServer.Utils.BitUtils do
   end
 
   @doc """
+  Generate a tuple {data, size} of values of size size with 0
+  """
+  def generateAllWithZero(size) when size >= 0 do
+    generateAll(size, false)
+  end
+
+  @doc """
   Add a 1 bit
   """
   def addOne({data, size}) do
@@ -26,22 +33,23 @@ defmodule ExAdServer.Utils.BitUtils do
     {(data <<< 1), size + 1}
   end
 
-
   @doc """
   Negate the data of the tuple is no_change is false
   """
-  def excludeIfNeeded({data, size} = value, no_change) do
-    case no_change do
-      false -> {~~~data, size}
-      _ -> value
+  def conditionalNot({data, size} = value, change) do
+    if (change) do
+      negate({data, size})
+    else
+      value
     end
   end
 
   @doc """
-  Generate a tuple {data, size} of values of size size with 0
+    Logical negation of a bit structure
   """
-  def generateAllWithZero(size) when size >= 0 do
-    generateAll(size, false)
+  def negate({key, size}) do
+    {ones, _} = generateAllWithOne(size)
+    {ones ^^^ key, size}
   end
 
   @doc """
@@ -54,15 +62,28 @@ defmodule ExAdServer.Utils.BitUtils do
   @doc """
     Put a specific bit at position
   """
-  def setBitAt({value, size}, bit, position) do
-    #IO.puts(inspect(Integer.digits(value, 2)))
+  def setBitAt({value, size}, bit, position) when position < size do
     if bit == 1 do
-      #IO.puts(inspect(Integer.digits(value ||| (bit <<< position), 2)))
       {value ||| (1 <<< position), size}
     else
-      #IO.puts(inspect(Integer.digits(value &&& ~~~(1 <<< position), 2)))
-      {value &&& ~~~(1 <<< position), size}
+      # 1's complement for bitwise not
+      {value &&& elem(negate({1 <<< position, position + 1}), 0), size}      
     end
+  end
+
+  @doc """
+    Print a bit structure in binary form
+  """
+  def dumpBits(key) when is_integer(key) do
+    IO.puts("Key: " <> inspect(Integer.digits(key, 2)))
+  end
+
+  @doc """
+    Print a bit structure in binary form
+  """
+  def dumpBits({key, size}) do
+    IO.puts("Key(" <> Integer.to_string(size) <> "): "
+                   <> inspect(Integer.digits(key, 2)))
   end
 
   ## Private functions

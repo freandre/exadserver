@@ -20,7 +20,7 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
              fn({indexName, indexMetadata}, acc) ->
                encodeSingleTarget(adConf["targeting"][indexName],
                                                  indexMetadata["distinctvalues"])
-                              |> aggregateAccumulators(acc)
+               |> aggregateAccumulators(acc)
              end)
 
     ETS.insert(store, {key, adConf["adid"]})
@@ -37,6 +37,7 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
                   |> aggregateAccumulators(acc)
                 end)
 
+    # TODO remplacer par foldl
     ret = MapSet.new(ETS.select(store,
                           ETS.fun2ms(fn({stored_key, id})
                               when
@@ -56,16 +57,16 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
   ## Encode a single target, the first argument is one of the targeting attribute
   ## the second the associated distinct values for this attribute, the last indicates
   ## the behavior if targeter is unknown
-  defp encodeSingleTarget(targeter, metadata) do
+  defp encodeSingleTarget(targeter, metadata) do    
+    inclusive = targeter["inclusive"]
     cond do
       # +1 for unknown value
       # let s fix the "unknown value" at the very begining of the bit field
     targeter == nil -> generateAllWithOne(length(metadata) + 1)
-    targeter["data"] == ["all"] -> length(metadata) + 1
-                                 |> generateAllWithOne()
-                                 |> excludeIfNeeded(targeter["inclusive"])
-                                 |> setBitAt(targeter["inclusive"] == false,
-                                             length(metadata) + 1)
+    targeter["data"] == ["all"] and inclusive -> generateAllWithOne(length(metadata) + 1)
+    targeter["data"] == ["all"] and inclusive == false ->
+                                 {1 <<< length(metadata), length(metadata) + 1}
+
     true -> metadata
             |> Enum.reduce({0, 1}, # not unknown so 0 at index 1
                      &(if &1 in targeter["data"] do
@@ -73,9 +74,8 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
                        else
                          addZero(&2)
                        end))
-            |> excludeIfNeeded(targeter["inclusive"])
-            |> setBitAt(targeter["inclusive"] == false,
-                        length(metadata) + 1)
+            |> conditionalNot(inclusive == false)
+            |> setBitAt(inclusive == false, length(metadata))
     end
   end
 

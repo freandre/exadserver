@@ -5,7 +5,7 @@ defmodule TypedSetAdServerTest do
 
   test "That our adServer can load some basic data", context do
     number = 1
-    {:ok, configserver} = ConfigServer.start_link({"./test/resources/targetingData.json", number})
+    {:ok, configserver} = ConfigServer.start_link({"./test/resources/simpleTargetingData.json", number})
     {:ok, adserver} = TypedSetAdServer.start_link(ConfigServer.getMetadata(configserver))
 
     Enum.each(context.simpleAdsData, &TypedSetAdServer.loadAd(adserver, &1))
@@ -26,7 +26,7 @@ defmodule TypedSetAdServerTest do
 
   test "That our adServer filter ads properly", context do
     number = 1
-    {:ok, configserver} = ConfigServer.start_link({"./test/resources/targetingData.json", number})
+    {:ok, configserver} = ConfigServer.start_link({"./test/resources/simpleTargetingData.json", number})
     {:ok, adserver} = TypedSetAdServer.start_link(ConfigServer.getMetadata(configserver))
 
     Enum.each(context.simpleAdsData, &TypedSetAdServer.loadAd(adserver, &1))

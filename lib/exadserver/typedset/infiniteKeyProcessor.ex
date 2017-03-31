@@ -25,22 +25,32 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
     {store, _indexes} = getStore(indexName, indexes)
     value = ad[indexName]
 
-    included = MapSet.new(ETS.select(store,
+    if value == nil do
+      MapSet.new(ETS.select(store,
+                            ETS.fun2ms(fn({{_, storedValue}, id})
+                                       when
+                                         storedValue == "all"
+                                       ->
+                                         id
+                                       end)))
+    else
+      included = MapSet.new(ETS.select(store,
                  ETS.fun2ms(fn({{inclusive, storedValue}, id})
-                              when
+                            when
                               (inclusive == true and
-                                    (storedValue == "all" or storedValue == value))
-                                or (inclusive == false and storedValue != value)
-                              ->
-                           id
-                 end)))
-    excluded = MapSet.new(ETS.select(store,
+                                (storedValue == "all" or storedValue == value))
+                              or (inclusive == false and storedValue != value)
+                            ->
+                              id
+                            end)))
+      excluded = MapSet.new(ETS.select(store,
                  ETS.fun2ms(fn({{inclusive, storedValue}, id})
-                              when
+                            when
                               inclusive == false and storedValue == value
-                              ->
-                           id
-                 end)))
-    MapSet.difference(included, excluded)
+                            ->
+                              id
+                            end)))
+      MapSet.difference(included, excluded)
+    end
   end
 end
