@@ -78,7 +78,7 @@ defmodule ExAdServer.Naive.AdServer do
     indexes = state[:indexes]
 
     with :ok <- validateRequest(adRequest, indexes) do
-      {:reply, filterRequest(adRequest, indexes, state[:adsStore]), state}
+      {:reply, filterRequest(adRequest, indexes), state}
     else
       reason -> {:reply, {:badArgument, reason}, state}
     end
@@ -108,48 +108,49 @@ defmodule ExAdServer.Naive.AdServer do
 
   ## Main filtering function, thanks to an accumulator initalized to all ad values,
   ## we iterate on index removing datas from this accumulator
-  defp filterRequest(adRequest, indexes, adsStore) do
-    IO.puts("Request:")
-    IO.puts(inspect(adRequest))
-
-    Enum.reduce(indexes,
-                MapSet.new(ETS.select(adsStore, ETS.fun2ms(fn({adId, _}) -> adId end))),
-                fn({indexName, indexStore}, acc) ->
-                  IO.puts(indexName)
-                  IO.puts("Accumulator at the begining:")
-                  IO.puts(inspect(acc))
-                  IO.puts("============")
-                  case MapSet.size(acc) do
-                    0 -> acc
-                    _ -> indexStore
-                         |> findInIndex(adRequest[indexName])
-                         |> MapSet.intersection(acc)
-                   end
-                end)
+  defp filterRequest(adRequest, indexes) do
+    Enum.reduce_while(indexes, :first,
+                      fn({indexName, indexStore}, acc) ->
+                        set = findInIndex(indexStore, adRequest[indexName])
+                        cond do
+                          :first == acc and MapSet.size(set) == 0 -> {:halt, set}
+                          :first == acc and MapSet.size(set) != 0 -> {:cont, set}
+                          :first != acc and MapSet.size(set) == 0 -> {:halt, set}
+                          :first != acc and MapSet.size(set) != 0 -> {:cont, MapSet.intersection(set, acc)}
+                        end
+                      end)    
   end
 
   ## Look values in an index :  we first filter all inclusive data and remove the
   ## exluding ones
   defp findInIndex(etsStore, value) do
-    included = MapSet.new(ETS.select(etsStore,
-               ETS.fun2ms(fn({{inclusive, storedValue}, id})
+    if value == nil do
+      MapSet.new(ETS.select(etsStore,
+                            ETS.fun2ms(fn({{_, storedValue}, id})
+                                       when
+                                         storedValue == "all"
+                                       ->
+                                         id
+                                       end)))
+    else
+      included = MapSet.new(ETS.select(etsStore,
+                 ETS.fun2ms(fn({{inclusive, storedValue}, id})
                             when
-                            (inclusive == true and
-                                  (storedValue == "all" or storedValue == value))
-                              or (inclusive == false and storedValue != value)
+                              (inclusive == true and
+                                (storedValue == "all" or storedValue == value))
+                              or (inclusive == false and storedValue != value
+                                and storedValue != "all")
                             ->
-                         id
-               end)))
-    excluded = MapSet.new(ETS.select(etsStore,
-               ETS.fun2ms(fn({{inclusive, storedValue}, id})
+                              id
+                            end)))
+      excluded = MapSet.new(ETS.select(etsStore,
+                 ETS.fun2ms(fn({{inclusive, storedValue}, id})
                             when
-                            inclusive == false and storedValue == value
+                              inclusive == false and storedValue == value
                             ->
-                         id
-               end)))
-    val = MapSet.difference(included, excluded)
-    IO.puts("Index returns:")
-    IO.puts(inspect(val))
-    val
+                              id
+                            end)))
+      MapSet.difference(included, excluded)
+    end
   end
 end

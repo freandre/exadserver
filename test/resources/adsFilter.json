@@ -13,7 +13,7 @@
                 "support": "leroy.merlin",
                 "geo": ""
             },
-            "expected": [564337]
+            "expected": [564337, 564338]
         },
     {
         "request": {
