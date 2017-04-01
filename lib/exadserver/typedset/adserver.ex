@@ -52,24 +52,26 @@ defmodule ExAdServer.TypedSet.AdServer do
     ads_store = ETS.new(:adsStore, [:set, :protected])
     indexes = %{}
     metadata = getMetadata(targetMetadata)
-    {:ok, [adsStore: ads_store, indexes: indexes, targetMetadata: metadata]}
+    {:ok, [adsStore: {ads_store, 0}, indexes: indexes, targetMetadata: metadata]}
   end
 
   ## handle_call callback for :load action, iterate on targeting keys creating
   ## an index for each
   def handle_call({:load, adConf}, _from, state) do
-    ETS.insert(state[:adsStore], {adConf["adid"], adConf})
+    {ads_store, num_ads} = state[:adsStore]
+    ETS.insert(ads_store, {adConf["adid"],  adConf})
+    state = Keyword.put(state, :adsStore, {ads_store, num_ads})
     state = Keyword.put(state, :indexes,
               Enum.reduce(state[:targetMetadata], state[:indexes],
               fn({indexName, indexProcessor, indexMetaData}, indexes) ->
-                indexProcessor.generateAndStoreIndex(adConf, {indexName, indexMetaData}, indexes)
+                indexProcessor.generateAndStoreIndex({adConf, num_ads + 1}, {indexName, indexMetaData}, indexes)
               end))
     {:reply, :ok, state}
   end
 
   ## handle_call callback for :getAd, perform a lookup on main  ad table
   def handle_call({:getAd, adId}, _from, state) do
-    case ETS.lookup(state[:adsStore], adId) do
+    case ETS.lookup(elem(state[:adsStore], 0), adId) do
       [] -> {:reply, :notfound, state}
       [{^adId, ad}] -> {:reply, ad, state}
     end

@@ -88,7 +88,7 @@ defmodule ExAdServer.Naive.AdServer do
 
   ## Create an index based on given index data
   defp createIndex({indexName, indexData}, adId, indexes) do
-    {store, indexes} = getStore(indexName, indexes)
+    {store, indexes} = getBagStore(indexName, indexes)
     Enum.each(indexData["data"], &ETS.insert(store, {{indexData["inclusive"], &1}, adId}))
     indexes
   end
@@ -118,7 +118,7 @@ defmodule ExAdServer.Naive.AdServer do
                           :first != acc and MapSet.size(set) == 0 -> {:halt, set}
                           :first != acc and MapSet.size(set) != 0 -> {:cont, MapSet.intersection(set, acc)}
                         end
-                      end)    
+                      end)
   end
 
   ## Look values in an index :  we first filter all inclusive data and remove the

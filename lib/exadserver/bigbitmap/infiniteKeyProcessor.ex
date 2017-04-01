@@ -16,7 +16,7 @@ defmodule ExAdServer.BigBitmap.InfiniteKeyProcessor do
   end
 
   def findInIndex(adRequest, {indexName, _indexMetadata}, indexes, accumulator) do
-    {ads_store, _indexes} = getStore("adsStore", indexes)
+    {ads_store, _indexes} = getBagStore("adsStore", indexes)
 
     # here the id is to copy matching id in the new accumulator, not delete from
     # the original

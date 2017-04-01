@@ -62,13 +62,20 @@ defmodule ExAdServer.Utils.BitUtils do
   @doc """
     Put a specific bit at position
   """
-  def setBitAt({value, size}, bit, position) when position < size do
+  def setBitAt({value, size}, bit, position) do
     if bit == 1 do
       {value ||| (1 <<< position), size}
     else
       # 1's complement for bitwise not
-      {value &&& elem(negate({1 <<< position, position + 1}), 0), size}      
+      {value &&& elem(negate({1 <<< position, position + 1}), 0), size}
     end
+  end
+
+  @doc """
+    Read bit at position
+  """
+  def getBitAt({value, _}, position) do
+    (value &&& (1 <<< (position - 1))) >>> (position - 1)
   end
 
   @doc """

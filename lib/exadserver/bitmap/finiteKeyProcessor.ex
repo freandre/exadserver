@@ -14,7 +14,7 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
 
   ## Behaviour Callbacks
   def generateAndStoreIndex(adConf, {indexName, indexMetadata}, indexes) do
-    {store, indexes} = getStore(indexName, indexes)
+    {store, indexes} = getBagStore(indexName, indexes)
 
     {key, _size} = encodeSingleTarget(adConf["targeting"][indexName],
                                       indexMetadata["distinctvalues"])
@@ -24,7 +24,7 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
   end
 
   def findInIndex(ad, {indexName, indexMetadata}, indexes) do
-    {store, _indexes} = getStore(indexName, indexes)
+    {store, _indexes} = getBagStore(indexName, indexes)
 
     {key, _size} = encodeKey(ad[indexName],
                              indexMetadata["distinctvalues"])
@@ -52,7 +52,7 @@ defmodule ExAdServer.Bitmap.FiniteKeyProcessor do
                                  |> length()
                                  |> generateAllWithOne()
                                  |> conditionalNot(inclusive == false)
-                                 
+
     true -> metadata
             |> Enum.reduce({0, 0},
                      &(if &1 in targeter["data"] do

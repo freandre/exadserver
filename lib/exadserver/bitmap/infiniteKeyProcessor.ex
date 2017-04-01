@@ -12,7 +12,7 @@ defmodule ExAdServer.Bitmap.InfiniteKeyProcessor do
   ## Behaviour Callbacks
 
   def generateAndStoreIndex(adConf, {indexName, _indexMetadata}, indexes) do
-    {store, indexes} = getStore(indexName, indexes)
+    {store, indexes} = getBagStore(indexName, indexes)
 
     targeter = adConf["targeting"][indexName]["data"]
     inclusive = adConf["targeting"][indexName]["inclusive"]
@@ -22,7 +22,7 @@ defmodule ExAdServer.Bitmap.InfiniteKeyProcessor do
   end
 
   def findInIndex(ad, {indexName, _indexMetadata}, indexes) do
-    {store, _indexes} = getStore(indexName, indexes)
+    {store, _indexes} = getBagStore(indexName, indexes)
     value = ad[indexName]
 
     if value == nil do

@@ -8,13 +8,13 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
 
   @behaviour ExAdServer.BigBitmap.BehaviorKeysProcessor
 
-  import ExAdServer.Utils.Storage
   import ExAdServer.Utils.BitUtils
+  import ExAdServer.Utils.Storage
   alias :ets, as: ETS
 
   ## Behaviour Callbacks
   def generateAndStoreIndex(adConf, {_, finiteMetadata}, indexes) do
-    {store, indexes} = getStore("finite", indexes)
+    {store, indexes} = getBagStore("finite", indexes)
 
     {key, _size} = Enum.reduce(finiteMetadata, {0, 0},
              fn({indexName, indexMetadata}, acc) ->
@@ -28,7 +28,7 @@ defmodule ExAdServer.BigBitmap.FiniteKeyProcessor do
   end
 
   def findInIndex(ad, {_, finiteMetadata}, indexes, accumulator) do
-    {store, _indexes} = getStore("finite", indexes)
+    {store, _indexes} = getBagStore("finite", indexes)
 
     {key, _size} = Enum.reduce(finiteMetadata, {0, 0},
                 fn ({indexName, indexMetadata}, acc) ->

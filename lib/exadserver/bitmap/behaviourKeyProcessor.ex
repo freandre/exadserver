@@ -6,7 +6,7 @@ defmodule  ExAdServer.Bitmap.BehaviorKeysProcessor do
 
   @doc """
   Prepare an index key or list of key
-  first argument is the ad configuration
+  first argument is a tuple ad configuration / bit index
   second argument is a tuple index name / index metadata
   third argument is the index registry
   returns the index registry as index can be added

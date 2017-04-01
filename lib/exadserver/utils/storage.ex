@@ -15,15 +15,31 @@ defmodule ExAdServer.Utils.Storage do
     |> Enum.each(&IO.puts(inspect(&1)))
   end
 
-  ## Return a a store based on index name, instanciate it if it does not exists
-  ## thus needing to return also the store registry
-  def getStore(indexName, indexes) do
-    if Map.has_key?(indexes, indexName) == false do
-      store = ETS.new(String.to_atom(indexName), [:bag, :protected])
-      new_indexes = Map.put(indexes, indexName, store)
+  @doc """
+  Get a bag store from a registry and its name. If not available it is created
+  and the registry updated
+  """
+  def getBagStore(name, indexes) do
+    if Map.has_key?(indexes, name) == false do
+      store = ETS.new(String.to_atom(name), [:bag])
+      new_indexes = Map.put(indexes, name, store)
       {store, new_indexes}
     else
-      {indexes[indexName], indexes}
+      {indexes[name], indexes}
+    end
+  end
+
+  @doc """
+  Get a set store from a registry and its name. If not available it is created
+  and the registry updated
+  """
+  def getStore(name, indexes) do
+    if Map.has_key?(indexes, name) == false do
+      store = ETS.new(String.to_atom(name), [])
+      new_indexes = Map.put(indexes, name, store)
+      {store, new_indexes}
+    else
+      {indexes[name], indexes}
     end
   end
 end
