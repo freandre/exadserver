@@ -75,7 +75,7 @@ defmodule ExAdServer.Utils.BitUtils do
     Read bit at position
   """
   def getBitAt({value, _}, position) do
-    (value &&& (1 <<< (position - 1))) >>> (position - 1)
+    (value &&& (1 <<< position)) >>> position
   end
 
   @doc """

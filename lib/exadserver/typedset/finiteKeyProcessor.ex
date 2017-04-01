@@ -19,23 +19,17 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   end
 
   def findInIndex(adRequest, ixToAdIDStore, {_, indexMetadata}, indexes) do
-    ret = Enum.reduce_while(indexMetadata, :first,
+    Enum.reduce_while(indexMetadata, :first,
                     fn({indexName, indexMetaData}, acc) ->
                       data = findInUniqueIndex(adRequest,
-                                        {indexName, indexMetaData}, indexes)
-                      cond do
-                        :first == acc and elem(data, 0) == 0 -> {:halt, data}
-                        :first == acc and elem(data, 0) != 0 -> {:cont, data}
-                        :first != acc and elem(data, 0) == 0 -> {:halt, data}
-                        :first != acc and elem(data, 0) != 0 -> {:cont, bitAnd(data, acc)}
+                                        {indexName, indexMetaData}, indexes, acc)
+                      if elem(data, 0) == 0 do
+                        {:halt, data}
+                      else
+                        {:cont, data}
                       end
                     end)
-
-    Enum.reduce(decodebitField(ret), MapSet.new,
-             fn(index, acc) ->
-               [{^index, adId}] = ETS.lookup(ixToAdIDStore, index)
-               MapSet.put(acc, adId)
-             end)
+    |> decodebitField(ixToAdIDStore)
   end
 
   ## Private functions
@@ -83,13 +77,17 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   end
 
   ## Find data in a unique index
-  defp findInUniqueIndex(request, {indexName, _}, indexes) do
+  defp findInUniqueIndex(request, {indexName, _}, indexes, acc) do
     {store, _indexes} = getStore(indexName, indexes)
 
     value = getValue(request[indexName])
     [{^value, data}] = ETS.lookup(store, value)
 
-    data
+    if :first == acc do
+      data
+    else
+      bitAnd(data, acc)
+    end
   end
 
   ## Simple filter to handle unknown value
@@ -101,9 +99,14 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
     end
   end
 
-  ## Decode a bitfield to a list of index having bit set to 1
-  defp decodebitField({_, size} = data) do
+  ## Decode a bitfield to a list of ad id
+  defp decodebitField({_, size} = data, ixToAdIDStore) do
     decodebitField(data, size - 1, [])
+    |> Enum.reduce(MapSet.new,
+             fn(index, acc) ->
+               [{^index, adId}] = ETS.lookup(ixToAdIDStore, index)
+               MapSet.put(acc, adId)
+             end)
   end
 
   defp decodebitField(data, index, ret) when index >= 0 do
