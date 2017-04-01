@@ -4,36 +4,52 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   """
   @compile {:parse_transform, :ms_transform}
 
-  @behaviour ExAdServer.Bitmap.BehaviorKeysProcessor
+  @behaviour ExAdServer.TypedSet.BehaviorKeysProcessor
 
   import ExAdServer.Utils.BitUtils
   import ExAdServer.Utils.Storage
   alias :ets, as: ETS
 
   ## Behaviour Callbacks
-  def generateAndStoreIndex({adConf, bitIndex}, {indexName, indexMetadata}, indexes) do
+  def generateAndStoreIndex(adData, {_, indexMetadata}, indexes) do
+    Enum.reduce(indexMetadata, indexes,
+                fn(indexData, acc) ->
+                  generateAndStoreUniqueIndex(adData, indexData, acc)
+                end)
+  end
+
+  def findInIndex(adRequest, ixToAdIDStore, {_, indexMetadata}, indexes) do
+    ret = Enum.reduce_while(indexMetadata, :first,
+                    fn({indexName, indexMetaData}, acc) ->
+                      data = findInUniqueIndex(adRequest,
+                                        {indexName, indexMetaData}, indexes)
+                      cond do
+                        :first == acc and elem(data, 0) == 0 -> {:halt, data}
+                        :first == acc and elem(data, 0) != 0 -> {:cont, data}
+                        :first != acc and elem(data, 0) == 0 -> {:halt, data}
+                        :first != acc and elem(data, 0) != 0 -> {:cont, bitAnd(data, acc)}
+                      end
+                    end)
+
+    Enum.reduce(decodebitField(ret), MapSet.new,
+             fn(index, acc) ->
+               [{^index, adId}] = ETS.lookup(ixToAdIDStore, index)
+               MapSet.put(acc, adId)
+             end)
+  end
+
+  ## Private functions
+
+  ## Deal with the processing of only one index
+  defp generateAndStoreUniqueIndex({adConf, bitIndex}, {indexName, indexMetadata}, indexes) do
     {store, indexes} = getStore(indexName, indexes)
     distinct_values = indexMetadata["distinctvalues"]
     values_to_store = adConf["targeting"][indexName]
                       |> getValuesToStore(distinct_values)
-
-    Enum.each(distinct_values,
+    Enum.each(["unknown" | distinct_values],
             &(generateAndStoreValue(store, &1, values_to_store, bitIndex)))
-
     indexes
   end
-
-  def findInIndex(request, {indexName, _}, indexes) do
-    {store, _indexes} = getStore(indexName, indexes)
-
-    value = getValue(request[indexName])
-    [{^value, data}] = ETS.lookup(store, value)
-    val = decodebitField(data)
-    IO.puts(inspect(val))
-    val
-  end
-
-  ## Private functions
 
   ## Select matching value to store data depending on conf values and inclusive tag
   defp getValuesToStore(confValues, distinctValues) do
@@ -51,8 +67,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   ## set the bit of retrived bitmap at index
   defp generateAndStoreValue(store, distinctvalue, keysToStore, bitIndex) do
     data = getStoredValue(store, distinctvalue)
-           |> setBitAt(distinctvalue in keysToStore, bitIndex)
-    dumpBits(data)
+           |> setBitAt(boolToBit(distinctvalue in keysToStore), bitIndex)
     ETS.insert(store, {distinctvalue,  data})
   end
 
@@ -67,6 +82,16 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
     end
   end
 
+  ## Find data in a unique index
+  defp findInUniqueIndex(request, {indexName, _}, indexes) do
+    {store, _indexes} = getStore(indexName, indexes)
+
+    value = getValue(request[indexName])
+    [{^value, data}] = ETS.lookup(store, value)
+
+    data
+  end
+
   ## Simple filter to handle unknown value
   defp getValue(requestValue) do
     if requestValue == nil do
@@ -78,7 +103,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
   ## Decode a bitfield to a list of index having bit set to 1
   defp decodebitField({_, size} = data) do
-    decodebitField(data, size - 1, MapSet.new)
+    decodebitField(data, size - 1, [])
   end
 
   defp decodebitField(data, index, ret) when index >= 0 do
@@ -92,8 +117,8 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
   ## Update list of index according to bit
   defp updateRet(ret, bit, index) do
-    if bit do
-      MapSet.put(ret,index)
+    if bit == 1 do
+      [index | ret]
     else
       ret
     end

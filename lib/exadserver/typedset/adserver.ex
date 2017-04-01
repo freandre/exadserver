@@ -49,22 +49,24 @@ defmodule ExAdServer.TypedSet.AdServer do
   ## an empty index registry for not finite values and finally the finite metadata
   ## structure
   def init(targetMetadata) do
-    ads_store = ETS.new(:adsStore, [:set, :protected])
+    ads_store = ETS.new(:adsStore, [])
+    ix_ads_store = ETS.new(:ixAdsStore, [])
     indexes = %{}
     metadata = getMetadata(targetMetadata)
-    {:ok, [adsStore: {ads_store, 0}, indexes: indexes, targetMetadata: metadata]}
+    {:ok, [adsStore: {ads_store, ix_ads_store, 0}, indexes: indexes, targetMetadata: metadata]}
   end
 
   ## handle_call callback for :load action, iterate on targeting keys creating
   ## an index for each
   def handle_call({:load, adConf}, _from, state) do
-    {ads_store, num_ads} = state[:adsStore]
+    {ads_store, ix_ads_store, num_ads} = state[:adsStore]
     ETS.insert(ads_store, {adConf["adid"],  adConf})
-    state = Keyword.put(state, :adsStore, {ads_store, num_ads})
+    ETS.insert(ix_ads_store, {num_ads, adConf["adid"]})
+    state = Keyword.put(state, :adsStore, {ads_store, ix_ads_store, num_ads + 1})
     state = Keyword.put(state, :indexes,
               Enum.reduce(state[:targetMetadata], state[:indexes],
               fn({indexName, indexProcessor, indexMetaData}, indexes) ->
-                indexProcessor.generateAndStoreIndex({adConf, num_ads + 1}, {indexName, indexMetaData}, indexes)
+                indexProcessor.generateAndStoreIndex({adConf, num_ads}, {indexName, indexMetaData}, indexes)
               end))
     {:reply, :ok, state}
   end
@@ -80,13 +82,14 @@ defmodule ExAdServer.TypedSet.AdServer do
   ## handle_call callback for :filter, performs some targeting based on a
   ## targeting request
   def handle_call({:filter, adRequest}, _from, state) do
+    {_, ix_ads_store, _} = state[:adsStore]
     indexes = state[:indexes]
     target_metadata = state[:targetMetadata]
 
     with :ok <- validateRequest(adRequest, indexes) do
       ret = Enum.reduce_while(target_metadata, :first,
                       fn({indexName, indexProcessor, indexMetaData}, acc) ->
-                        set = indexProcessor.findInIndex(adRequest,
+                        set = indexProcessor.findInIndex(adRequest, ix_ads_store,
                                           {indexName, indexMetaData}, indexes)
                         cond do
                           :first == acc and MapSet.size(set) == 0 -> {:halt, set}
@@ -104,8 +107,9 @@ defmodule ExAdServer.TypedSet.AdServer do
   ## Private functions
 
   ## Prepare a list of processor to create keys. finite set are put first to filter
-  ## most of the request, followed by inifintie and finally the most computer
-  ## intensive geolocation
+  ## most of the request, followed by infinite and finally the most computer
+  ## intensive geolocation. Finite set are  aggregated to handle bitwise
+  ## filtering
   defp getMetadata(targetMetadata) do
     {finite, infinite, geo} = Enum.reduce(targetMetadata, {[], [], []},
                 fn({k, v}, {finite, infinite, geo}) ->
@@ -115,7 +119,12 @@ defmodule ExAdServer.TypedSet.AdServer do
                     "geo" -> {finite, infinite, [{k, ExAdServer.TypedSet.GeoKeyProcessor, v} | geo]}
                   end
                 end)
-    finite ++ infinite ++ geo
+
+    finite_map = Enum.reduce(finite, %{},
+                fn ({k_to_add,_, v_to_add}, acc) ->
+                  Map.put_new(acc, k_to_add, v_to_add)
+                end)
+    [{"finite", ExAdServer.TypedSet.FiniteKeyProcessor, finite_map} | infinite] ++ geo
   end
 
   ## Validate that a filtering request provides a set of know targets

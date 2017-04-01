@@ -64,10 +64,10 @@ defmodule ExAdServer.Utils.BitUtils do
   """
   def setBitAt({value, size}, bit, position) do
     if bit == 1 do
-      {value ||| (1 <<< position), size}
+      {value ||| (1 <<< position), max(size, position + 1)}
     else
       # 1's complement for bitwise not
-      {value &&& elem(negate({1 <<< position, position + 1}), 0), size}
+      {value &&& elem(negate({1 <<< position, position + 1}), 0), max(size, position + 1)}
     end
   end
 
@@ -76,6 +76,24 @@ defmodule ExAdServer.Utils.BitUtils do
   """
   def getBitAt({value, _}, position) do
     (value &&& (1 <<< (position - 1))) >>> (position - 1)
+  end
+
+  @doc """
+    Convert a boolean value to bit
+  """
+  def boolToBit(value) when is_boolean(value)do
+    if value do
+      1
+    else
+      0
+    end
+  end
+
+  @doc """
+    Bitwise and on the structure
+  """
+  def bitAnd({f1, s1}, {f2, s2}) do
+    {f1 &&& f2, max(s1, s2)}
   end
 
   @doc """

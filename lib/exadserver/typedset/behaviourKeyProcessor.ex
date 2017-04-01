@@ -16,9 +16,10 @@ defmodule  ExAdServer.TypedSet.BehaviorKeysProcessor do
   @doc """
   Perform a search in an index
   first argument is a targeting ad
-  second argument a tuple containing the index name and its metadata
-  third argument is the index registry
+  second argument is the bit index number to ad id store
+  third argument a tuple containing the index name and its metadata
+  fourth argument is the index registry
   returns a set of matching ad configuration for this index
   """
-  @callback findInIndex(Map.t, Tuple.t, Map.t) :: MapSet.t
+  @callback findInIndex(Map.t, PID.t, Tuple.t, Map.t) :: MapSet.t
 end

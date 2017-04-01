@@ -98,7 +98,7 @@ defmodule ExAdServer.BigBitmap.AdServer do
   ## Private functions
 
   ## Prepare a list of processor to create keys. finite set are put first to filter
-  ## most of the request, followed by inifintie and finally the most computer
+  ## most of the request, followed by infinite and finally the most computer
   ## intensive geolocation. Finite set are  aggregated to generate only one key
   defp getMetadata(targetMetadata) do
     {finite, infinite, geo} = Enum.reduce(targetMetadata, {[], [], []},

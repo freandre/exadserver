@@ -4,7 +4,7 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
   """
   @compile {:parse_transform, :ms_transform}
 
-  @behaviour ExAdServer.Bitmap.BehaviorKeysProcessor
+  @behaviour ExAdServer.TypedSet.BehaviorKeysProcessor
 
   import ExAdServer.Utils.Storage
   alias :ets, as: ETS
@@ -21,7 +21,7 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
     indexes
   end
 
-  def findInIndex(ad, {indexName, _indexMetadata}, indexes) do
+  def findInIndex(ad, _ixToAdIDStore, {indexName, _indexMetadata}, indexes) do
     {store, _indexes} = getBagStore(indexName, indexes)
     value = ad[indexName]
 
