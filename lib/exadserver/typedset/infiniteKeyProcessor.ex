@@ -24,9 +24,7 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
   def findInIndex(adRequest, {indexName, _}, indexes, accumulator) do
     {adsStore, _} = getStore("adsStore", indexes)
 
-    # here the id is to copy matching id in the new accumulator, not delete from
-    # the original
-    Enum.reduce(accumulator, MapSet.new,
+    Enum.reduce(accumulator, accumulator,
                 fn(ad_id, acc) ->
                   [{^ad_id, ad_conf}] = ETS.lookup(adsStore, ad_id)
                     conf_values = ad_conf["targeting"][indexName]
@@ -34,12 +32,13 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
                     conf_data = conf_values["data"]
 
                     cond do
-                      conf_inclusive == true and adRequest[indexName] in conf_data
-                              -> MapSet.put(acc, ad_id)
-                      conf_inclusive == true and conf_data == ["all"]
-                              -> MapSet.put(acc, ad_id)
-                      conf_inclusive == false and (adRequest[indexName] in conf_data) == false
-                              -> MapSet.put(acc, ad_id)
+                      conf_inclusive == false and adRequest[indexName] in conf_data
+                              -> MapSet.delete(acc, ad_id)
+                      conf_inclusive == false and conf_data == ["all"]
+                              -> MapSet.delete(acc, ad_id)
+                      conf_inclusive == true and ((adRequest[indexName] in conf_data) == false)
+                                             and conf_data != ["all"]
+                              -> MapSet.delete(acc, ad_id)
                       true -> acc
                     end
                 end)
