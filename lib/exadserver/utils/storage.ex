@@ -19,7 +19,7 @@ defmodule ExAdServer.Utils.Storage do
   Get a bag store from a registry and its name. If not available it is created
   and the registry updated
   """
-  def getBagStore(name, indexes) do
+  def getBagStore(name, indexes \\ %{}) do
     if Map.has_key?(indexes, name) == false do
       store = ETS.new(String.to_atom(name), [:bag])
       new_indexes = Map.put(indexes, name, store)
@@ -33,7 +33,7 @@ defmodule ExAdServer.Utils.Storage do
   Get a set store from a registry and its name. If not available it is created
   and the registry updated
   """
-  def getStore(name, indexes) do
+  def getStore(name, indexes \\ %{}) do
     if Map.has_key?(indexes, name) == false do
       store = ETS.new(String.to_atom(name), [])
       new_indexes = Map.put(indexes, name, store)

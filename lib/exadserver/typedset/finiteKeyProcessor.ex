@@ -18,8 +18,10 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
                 end)
   end
 
-  def findInIndex(adRequest, ixToAdIDStore, {_, indexMetadata}, indexes) do
-    Enum.reduce_while(indexMetadata, :first,
+  def findInIndex(adRequest, {_, indexMetadata}, indexes, acc) do
+    {ix_ads_store, indexes} = getStore("ixToAdsStore", indexes)
+
+    ret = Enum.reduce_while(indexMetadata, :first,
                     fn({indexName, indexMetaData}, acc) ->
                       data = findInUniqueIndex(adRequest,
                                         {indexName, indexMetaData}, indexes, acc)
@@ -29,7 +31,13 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
                         {:cont, data}
                       end
                     end)
-    |> decodebitField(ixToAdIDStore)
+    |> decodebitField(ix_ads_store)
+
+    if acc == :first do
+      ret
+    else
+      MapSet.intersection(ret, acc)
+    end
   end
 
   ## Private functions

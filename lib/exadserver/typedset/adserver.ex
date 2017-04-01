@@ -4,6 +4,7 @@ defmodule ExAdServer.TypedSet.AdServer do
   Finite values are dernormalized to find adid
   """
 
+  import ExAdServer.Utils.Storage
   alias :ets, as: ETS
 
   use GenServer
@@ -49,22 +50,27 @@ defmodule ExAdServer.TypedSet.AdServer do
   ## an empty index registry for not finite values and finally the finite metadata
   ## structure
   def init(targetMetadata) do
-    ads_store = ETS.new(:adsStore, [])
-    ix_ads_store = ETS.new(:ixAdsStore, [])
-    indexes = %{}
+    {_, indexes} = getStore("adsStore")
+    {_, indexes} = getStore("ixToAdsStore", indexes)
     metadata = getMetadata(targetMetadata)
-    {:ok, [adsStore: {ads_store, ix_ads_store, 0}, indexes: indexes, targetMetadata: metadata]}
+    {:ok, [maxIndex: 0, indexes: indexes, targetMetadata: metadata]}
   end
 
   ## handle_call callback for :load action, iterate on targeting keys creating
   ## an index for each
   def handle_call({:load, adConf}, _from, state) do
-    {ads_store, ix_ads_store, num_ads} = state[:adsStore]
+    num_ads = state[:maxIndex]
+    indexes = state[:indexes]
+
+    {ads_store, _} = getStore("adsStore", indexes)
+    {ix_ads_store, indexes} = getStore("ixToAdsStore", indexes)
+
     ETS.insert(ads_store, {adConf["adid"],  adConf})
     ETS.insert(ix_ads_store, {num_ads, adConf["adid"]})
-    state = Keyword.put(state, :adsStore, {ads_store, ix_ads_store, num_ads + 1})
+
+    state = Keyword.put(state, :maxIndex, num_ads + 1)
     state = Keyword.put(state, :indexes,
-              Enum.reduce(state[:targetMetadata], state[:indexes],
+              Enum.reduce(state[:targetMetadata], indexes,
               fn({indexName, indexProcessor, indexMetaData}, indexes) ->
                 indexProcessor.generateAndStoreIndex({adConf, num_ads}, {indexName, indexMetaData}, indexes)
               end))
@@ -73,7 +79,8 @@ defmodule ExAdServer.TypedSet.AdServer do
 
   ## handle_call callback for :getAd, perform a lookup on main  ad table
   def handle_call({:getAd, adId}, _from, state) do
-    case ETS.lookup(elem(state[:adsStore], 0), adId) do
+    {ads_store, _} = getStore("adsStore", state[:indexes])    
+    case ETS.lookup(ads_store, adId) do
       [] -> {:reply, :notfound, state}
       [{^adId, ad}] -> {:reply, ad, state}
     end
@@ -82,20 +89,18 @@ defmodule ExAdServer.TypedSet.AdServer do
   ## handle_call callback for :filter, performs some targeting based on a
   ## targeting request
   def handle_call({:filter, adRequest}, _from, state) do
-    {_, ix_ads_store, _} = state[:adsStore]
     indexes = state[:indexes]
     target_metadata = state[:targetMetadata]
 
     with :ok <- validateRequest(adRequest, indexes) do
       ret = Enum.reduce_while(target_metadata, :first,
                       fn({indexName, indexProcessor, indexMetaData}, acc) ->
-                        set = indexProcessor.findInIndex(adRequest, ix_ads_store,
-                                          {indexName, indexMetaData}, indexes)
-                        cond do
-                          :first == acc and MapSet.size(set) == 0 -> {:halt, set}
-                          :first == acc and MapSet.size(set) != 0 -> {:cont, set}
-                          :first != acc and MapSet.size(set) == 0 -> {:halt, set}
-                          :first != acc and MapSet.size(set) != 0 -> {:cont, MapSet.intersection(set, acc)}
+                        set = indexProcessor.findInIndex(adRequest,
+                                          {indexName, indexMetaData}, indexes, acc)
+                        if MapSet.size(set) == 0 do
+                          {:halt, set}
+                        else
+                          {:cont, set}
                         end
                       end)
       {:reply, ret, state}

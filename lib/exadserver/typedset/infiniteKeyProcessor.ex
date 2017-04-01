@@ -21,36 +21,27 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
     indexes
   end
 
-  def findInIndex(ad, _ixToAdIDStore, {indexName, _indexMetadata}, indexes) do
-    {store, _indexes} = getBagStore(indexName, indexes)
-    value = ad[indexName]
+  def findInIndex(adRequest, {indexName, _}, indexes, accumulator) do
+    {adsStore, _} = getStore("adsStore", indexes)
 
-    if value == nil do
-      MapSet.new(ETS.select(store,
-                            ETS.fun2ms(fn({{_, storedValue}, id})
-                                       when
-                                         storedValue == "all"
-                                       ->
-                                         id
-                                       end)))
-    else
-      included = MapSet.new(ETS.select(store,
-                 ETS.fun2ms(fn({{inclusive, storedValue}, id})
-                            when
-                              (inclusive == true and
-                                (storedValue == "all" or storedValue == value))
-                              or (inclusive == false and storedValue != value)
-                            ->
-                              id
-                            end)))
-      excluded = MapSet.new(ETS.select(store,
-                 ETS.fun2ms(fn({{inclusive, storedValue}, id})
-                            when
-                              inclusive == false and storedValue == value
-                            ->
-                              id
-                            end)))
-      MapSet.difference(included, excluded)
-    end
+    # here the id is to copy matching id in the new accumulator, not delete from
+    # the original
+    Enum.reduce(accumulator, MapSet.new,
+                fn(ad_id, acc) ->
+                  [{^ad_id, ad_conf}] = ETS.lookup(adsStore, ad_id)
+                    conf_values = ad_conf["targeting"][indexName]
+                    conf_inclusive = conf_values["inclusive"]
+                    conf_data = conf_values["data"]
+
+                    cond do
+                      conf_inclusive == true and adRequest[indexName] in conf_data
+                              -> MapSet.put(acc, ad_id)
+                      conf_inclusive == true and conf_data == ["all"]
+                              -> MapSet.put(acc, ad_id)
+                      conf_inclusive == false and (adRequest[indexName] in conf_data) == false
+                              -> MapSet.put(acc, ad_id)
+                      true -> acc
+                    end
+                end)
   end
 end
