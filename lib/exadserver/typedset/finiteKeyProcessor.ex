@@ -2,7 +2,6 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   @moduledoc """
   Finite key processor implementation.
   """
-  @compile {:parse_transform, :ms_transform}
 
   @behaviour ExAdServer.TypedSet.BehaviorKeysProcessor
 

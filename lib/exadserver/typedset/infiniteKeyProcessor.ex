@@ -2,8 +2,7 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
   @moduledoc """
   Infinite key processor implementation.
   """
-  @compile {:parse_transform, :ms_transform}
-
+  
   @behaviour ExAdServer.TypedSet.BehaviorKeysProcessor
 
   import ExAdServer.Utils.Storage

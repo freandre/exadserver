@@ -2,7 +2,6 @@ defmodule ExAdServer.BigBitmap.InfiniteKeyProcessor do
   @moduledoc """
   Infinite key processor implementation.
   """
-  @compile {:parse_transform, :ms_transform}
 
   @behaviour ExAdServer.BigBitmap.BehaviorKeysProcessor
 
