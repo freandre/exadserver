@@ -2,7 +2,7 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
   @moduledoc """
   Infinite key processor implementation.
   """
-  
+
   @behaviour ExAdServer.TypedSet.BehaviorKeysProcessor
 
   import ExAdServer.Utils.Storage
@@ -10,18 +10,12 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
 
   ## Behaviour Callbacks
 
-  def generateAndStoreIndex({adConf, _bitIndex}, {indexName, _indexMetadata}, indexes) do
-    {store, indexes} = getBagStore(indexName, indexes)
-
-    targeter = adConf["targeting"][indexName]["data"]
-    inclusive = adConf["targeting"][indexName]["inclusive"]
-
-    ETS.insert(store, Enum.map(targeter, &({{inclusive, &1}, adConf["adid"]})))
-    indexes
+  def generateAndStoreIndex(_, {indexName, _}, indexes) do
+    Map.put(indexes, indexName, nil)
   end
 
   def findInIndex(adRequest, {indexName, _}, indexes, accumulator) do
-    {adsStore, _} = getStore("adsStore", indexes)
+    {adsStore, _} = getBagStore("adsStore", indexes)
 
     Enum.reduce(accumulator, accumulator,
                 fn(ad_id, acc) ->
