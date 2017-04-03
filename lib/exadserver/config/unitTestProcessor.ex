@@ -13,13 +13,8 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
                      |> File.read!()
                      |> Poison.decode!
     # generate ads
-    ads_map = 1..numberOfAds
-            |> Enum.to_list
-            |> Enum.reduce(%{},
-                           fn(_, acc) ->
-                             targeting_obj = generateTargeting(targeting_data)
-                             Map.put(acc, targeting_obj["adid"], targeting_obj)
-                           end)
+    ads_map = generateAdsConf(numberOfAds, targeting_data)
+
     target_metadata = Enum.reduce(targeting_data, %{},
                                  fn({targetName, values}, acc) ->
                                    Map.put(acc, targetName, prepareMetadata(values))
@@ -45,6 +40,21 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
   end
 
   ## Private functions
+
+  ## Generate random ad configuration
+  defp generateAdsConf(nb, targetingData) do
+    if nb > 0 do
+      1..nb
+      |> Enum.to_list
+      |> Enum.reduce(%{},
+                     fn(_, acc) ->
+                       targeting_obj = generateTargeting(targetingData)
+                       Map.put(acc, targeting_obj["adid"], targeting_obj)
+                     end)
+    else
+      %{}
+    end
+  end
 
   ## Generate a targeting object for testing purpose
   defp generateTargeting(targetsData) do

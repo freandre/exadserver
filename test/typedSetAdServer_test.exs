@@ -4,8 +4,7 @@ defmodule TypedSetAdServerTest do
   alias ExAdServer.Config.ConfigServer
 
   test "That our adServer can load some basic data", context do
-    number = 1
-    {:ok, configserver} = ConfigServer.start_link({"./test/resources/simpleTargetingData.json", number})
+    {:ok, configserver} = ConfigServer.start_link({"./test/resources/simpleTargetingData.json", 0})
     {:ok, adserver} = TypedSetAdServer.start_link(ConfigServer.getMetadata(configserver))
 
     Enum.each(context.simpleAdsData, &TypedSetAdServer.loadAd(adserver, &1))
@@ -24,9 +23,67 @@ defmodule TypedSetAdServerTest do
             )
   end
 
+  test "That our adServer can update some basic data", context do
+    {:ok, configserver} = ConfigServer.start_link({"./test/resources/simpleTargetingData.json", 0})
+    {:ok, adserver} = TypedSetAdServer.start_link(ConfigServer.getMetadata(configserver))
+
+    Enum.each(context.simpleAdsData, &TypedSetAdServer.loadAd(adserver, &1))
+
+    [ad | _] = context.simpleAdsData
+    adMod = Map.put(ad, "test", "test")
+
+    TypedSetAdServer.loadAd(adserver, adMod)
+    returned = TypedSetAdServer.getAd(adserver, ad["adid"])
+
+    assert(returned != ad,
+          """
+          Ads are identical
+          Expected:
+          #{inspect(adMod)}
+          Had:
+          #{inspect(returned)}
+          """)
+  end
+
+  test "That our adServer returns :notfound", context do
+    {:ok, configserver} = ConfigServer.start_link({"./test/resources/simpleTargetingData.json", 0})
+    {:ok, adserver} = TypedSetAdServer.start_link(ConfigServer.getMetadata(configserver))
+
+    Enum.each(context.simpleAdsData, &TypedSetAdServer.loadAd(adserver, &1))
+
+    returned = TypedSetAdServer.getAd(adserver, 42)
+
+    assert(returned == :notfound,
+          """
+          Unable to handle :notfound
+          Expected:
+          :notfound
+          Had:
+          #{inspect(returned)}
+          """)
+  end
+
+  test "That our adServer filter check args", context do
+    {:ok, configserver} = ConfigServer.start_link({"./test/resources/simpleTargetingData.json", 0})
+    {:ok, adserver} = TypedSetAdServer.start_link(ConfigServer.getMetadata(configserver))
+
+    Enum.each(context.simpleAdsData, &TypedSetAdServer.loadAd(adserver, &1))
+
+    {status, reason} = TypedSetAdServer.filterAd(adserver, %{"anything" => "anything"})
+
+    assert(status == :badArgument,
+          """
+          Unable to handle :notfound
+          Expected:
+          :badArgument
+          Had:
+          #{status}
+          #{reason}
+          """)
+  end
+
   test "That our adServer filter ads properly", context do
-    number = 1
-    {:ok, configserver} = ConfigServer.start_link({"./test/resources/simpleTargetingData.json", number})
+    {:ok, configserver} = ConfigServer.start_link({"./test/resources/simpleTargetingData.json", 0})
     {:ok, adserver} = TypedSetAdServer.start_link(ConfigServer.getMetadata(configserver))
 
     Enum.each(context.simpleAdsData, &TypedSetAdServer.loadAd(adserver, &1))

@@ -37,7 +37,7 @@ defmodule ExAdServer.Config.ConfigServer do
   @doc """
   init based on path, this is mainly used for unit testing
   """
-  def init({_path, number_of_ads} = params) when number_of_ads >= 1 do
+  def init({_path, number_of_ads} = params) when number_of_ads >= 0 do
     processor = ExAdServer.Config.UnitTestProcessor
     {:ok, [processor: processor, data: processor.init(params)]}
   end
