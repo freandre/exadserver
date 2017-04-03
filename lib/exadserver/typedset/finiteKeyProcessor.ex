@@ -75,7 +75,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
     Logger.debug fn -> "distinct values:\n#{inspect(distinct_values)}" end
     Logger.debug fn -> "Values to store:\n#{inspect(values_to_store)}" end
 
-    Enum.each(distinct_values, &(generateAndStoreValue(store, &1, values_to_store, bitIndex)))
+    Enum.each(values_to_store, &(generateAndStoreValue(store, &1, bitIndex)))
     indexes
   end
 
@@ -93,9 +93,9 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
   ## Given a key of distinct values, check if it's part of values to store
   ## set the bit of retrived bitmap at index
-  defp generateAndStoreValue(store, distinctValue, keysToStore, bitIndex) do
+  defp generateAndStoreValue(store, distinctValue, bitIndex) do
     data = getStoredValue(store, distinctValue)
-           |> setBitAt(boolToBit(distinctValue in keysToStore), bitIndex)
+           |> setBitAt(1, bitIndex)
     Logger.debug fn -> "[finiteKeyProcessor] - generateAndStoreValue #{distinctValue}:\n#{dumpBitsStr(data)}" end
     ETS.insert(store, {distinctValue,  data})
   end
