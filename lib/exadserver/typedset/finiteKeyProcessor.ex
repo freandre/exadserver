@@ -14,9 +14,8 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
   def generateMetadata(targeterMetada) do
     val = targeterMetada
-    |> Enum.filter(fn ({_, v}) -> v["type"] == "finite" end)
-    #|> Enum.filter_map(fn ({_, v}) -> v["type"] == "finite" end,
-    #                   fn ({k, v}) -> {k, updateDistinctValues(v)} end)
+    |> Enum.filter_map(fn ({_, v}) -> v["type"] == "finite" end,
+                       fn ({k, v}) -> {k, updateDistinctValues(v)} end)
     |> Enum.reduce(%{}, fn ({k, v}, acc) -> Map.put(acc, k, v) end)
     ret = [{"finite", ExAdServer.TypedSet.FiniteKeyProcessor, val}]
 
@@ -76,7 +75,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
     Logger.debug fn -> "distinct values:\n#{inspect(distinct_values)}" end
     Logger.debug fn -> "Values to store:\n#{inspect(values_to_store)}" end
 
-    Enum.each(["unknown" | distinct_values], &(generateAndStoreValue(store, &1, values_to_store, bitIndex)))
+    Enum.each(distinct_values, &(generateAndStoreValue(store, &1, values_to_store, bitIndex)))
     indexes
   end
 
@@ -85,10 +84,10 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
     inclusive = confValues["inclusive"]
     cond do
       inclusive == nil or (inclusive and confValues["data"] == ["all"])
-                    -> ["unknown" | distinctValues]
+                    -> distinctValues
       inclusive == false and confValues["data"] == ["all"] -> ["unknown"]
       inclusive -> confValues["data"]
-      inclusive == false -> distinctValues -- confValues["data"]
+      inclusive == false -> (distinctValues -- confValues["data"]) -- ["unknown"]
     end
   end
 
