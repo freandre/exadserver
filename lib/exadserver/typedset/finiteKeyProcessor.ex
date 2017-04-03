@@ -15,7 +15,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
     val = targeterMetada
     |> Enum.filter_map(fn ({_, v}) -> v["type"] == "finite" end,
                        fn ({k, v}) -> {k, getMappers(v)} end)
-    |> Enum.reduce(%{}, fn ({k, v}, acc) -> Map.put_new(acc, k, v) end)
+    |> Enum.reduce(%{}, fn ({k, v}, acc) -> Map.put(acc, k, v) end)
     [{"finite", ExAdServer.TypedSet.FiniteKeyProcessor, val}]
   end
 
@@ -52,47 +52,47 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
   ## Update the metadata with and index number to data and its reverse mapper
   defp getMappers(v) do
-    {data_to_ix, ix_to_data, _} =
-      Enum.reduce(v["distinctvalues"], {%{"unknown" => 0}, %{"unknown" => 0}, 1},
-                  fn (val, {data_to_ix, ix_to_data, index}) ->
+    {data_to_ix, _} =
+      Enum.reduce(v["distinctvalues"], {%{"unknown" => 0}, 1},
+                  fn (val, {data_to_ix, index}) ->
                     {Map.put(data_to_ix, val, index),
-                     Map.put(ix_to_data, index, val),
                      index + 1}
                   end)
     v
     |> Map.put("datatoix", data_to_ix)
-    |> Map.put("ixtodata", ix_to_data)
   end
 
   ## Deal with the processing of only one index
   defp generateAndStoreUniqueIndex({adConf, bitIndex}, {indexName, indexMetadata}, indexes) do
     {store, indexes} = getStore(indexName, indexes)
-    distinct_values = indexMetadata["distinctvalues"]
+    data_to_ix = indexMetadata["datatoix"]
     values_to_store = adConf["targeting"][indexName]
-                      |> getValuesToStore(distinct_values)
-    Enum.each(["unknown" | distinct_values],
-            &(generateAndStoreValue(store, &1, values_to_store, bitIndex)))
+                      |> getValuesToStore(data_to_ix)
+    Enum.each(data_to_ix,
+            fn (val) ->
+              generateAndStoreValue(store, val, values_to_store, bitIndex)
+            end)
     indexes
   end
 
   ## Select matching value to store data depending on conf values and inclusive tag
-  defp getValuesToStore(confValues, distinctValues) do
+  defp getValuesToStore(confValues, dataToIx) do
     inclusive = confValues["inclusive"]
     cond do
-      inclusive == nil -> ["unknown" | distinctValues]
-      inclusive and confValues["data"] == ["all"] -> ["unknown" | distinctValues]
+      inclusive == nil or (inclusive and confValues["data"] == ["all"]) ->
+                   Enum.map(dataToIx, fn ({value, _}) -> value end)
       inclusive == false and confValues["data"] == ["all"] -> ["unknown"]
       inclusive -> confValues["data"]
-      inclusive == false -> distinctValues -- confValues["data"]
+      inclusive == false -> Enum.map(dataToIx, fn ({value, _}) -> value end)  -- confValues["data"]
     end
   end
 
   ## Given a key of distinct values, check if it's part of values to store
   ## set the bit of retrived bitmap at index
-  defp generateAndStoreValue(store, distinctvalue, keysToStore, bitIndex) do
-    data = getStoredValue(store, distinctvalue)
-           |> setBitAt(boolToBit(distinctvalue in keysToStore), bitIndex)
-    ETS.insert(store, {distinctvalue,  data})
+  defp generateAndStoreValue(store, {data_value, data_index}, keysToStore, bitIndex) do
+    data = getStoredValue(store, data_index)
+           |> setBitAt(boolToBit(data_value in keysToStore), bitIndex)
+    ETS.insert(store, {data_index,  data})
   end
 
   ## Get a stored value or initialize it
@@ -107,10 +107,11 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   end
 
   ## Find data in a unique index
-  defp findInUniqueIndex(request, {indexName, _}, indexes, acc) do
+  defp findInUniqueIndex(request, {indexName, indexMedata}, indexes, acc) do
     {store, _indexes} = getStore(indexName, indexes)
 
     value = getValue(request[indexName])
+    value = indexMedata["datatoix"][value]
     [{^value, data}] = ETS.lookup(store, value)
 
     if :first == acc do
