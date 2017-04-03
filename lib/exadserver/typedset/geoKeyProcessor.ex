@@ -5,6 +5,7 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
 
   @behaviour ExAdServer.TypedSet.BehaviorKeysProcessor
 
+  require Logger
   import ExAdServer.Utils.Storage
   alias :ets, as: ETS
 
@@ -38,9 +39,11 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
   ## Behaviour Callbacks
 
   def generateMetadata(targeterMetada) do
-    targeterMetada
+    ret = targeterMetada
     |> Enum.filter_map(fn ({_, v}) -> v["type"] == "geo" end,
                        fn ({k, v}) -> {k, ExAdServer.TypedSet.GeoKeyProcessor, v} end)
+    Logger.debug fn -> "[GeoKeyProcessor] - Exiting generateMetadata returning:\n#{inspect(ret)}" end
+    ret
   end
 
   def generateAndStoreIndex({adConf, _}, {indexName, _}, indexes) do

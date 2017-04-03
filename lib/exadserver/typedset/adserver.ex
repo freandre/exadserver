@@ -95,9 +95,8 @@ defmodule ExAdServer.TypedSet.AdServer do
     with :ok <- validateRequest(adRequest, indexes) do
       ret = Enum.reduce_while(target_metadata, :first,
                       fn({indexName, indexProcessor, indexMetaData}, acc) ->
-                        {time, set} = :timer.tc( fn -> indexProcessor.findInIndex(adRequest,
-                                          {indexName, indexMetaData}, indexes, acc) end)
-                                          IO.puts(Integer.to_string(time))
+                        set = indexProcessor.findInIndex(adRequest,
+                                          {indexName, indexMetaData}, indexes, acc)
                         if MapSet.size(set) == 0 do
                           {:halt, set}
                         else

@@ -14,8 +14,9 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
   def generateMetadata(targeterMetada) do
     val = targeterMetada
-    |> Enum.filter_map(fn ({_, v}) -> v["type"] == "finite" end,
-                       fn ({k, v}) -> {k, updateDistinctValues(v)} end)
+    |> Enum.filter(fn ({_, v}) -> v["type"] == "finite" end)
+    #|> Enum.filter_map(fn ({_, v}) -> v["type"] == "finite" end,
+    #                   fn ({k, v}) -> {k, updateDistinctValues(v)} end)
     |> Enum.reduce(%{}, fn ({k, v}, acc) -> Map.put(acc, k, v) end)
     ret = [{"finite", ExAdServer.TypedSet.FiniteKeyProcessor, val}]
 
@@ -69,37 +70,35 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
     Logger.debug fn ->  "conf:\n#{inspect(adConf["targeting"][indexName])}" end
 
     {store, indexes} = getStore(indexName, indexes)
-    distinctvalues = indexMetadata["distinctvalues"]
+    distinct_values = indexMetadata["distinctvalues"]
     values_to_store = adConf["targeting"][indexName]
-                      |> getValuesToStore(distinctvalues)
-    Logger.debug fn -> "distinct values:\n#{inspect(distinctvalues)}" end
+                      |> getValuesToStore(distinct_values)
+    Logger.debug fn -> "distinct values:\n#{inspect(distinct_values)}" end
     Logger.debug fn -> "Values to store:\n#{inspect(values_to_store)}" end
 
-    Enum.each(distinctvalues,
-            fn (distinctvalue) ->
-              generateAndStoreValue(store, distinctvalue, values_to_store, bitIndex)
-            end)
+    Enum.each(["unknown" | distinct_values], &(generateAndStoreValue(store, &1, values_to_store, bitIndex)))
     indexes
   end
 
   ## Select matching value to store data depending on conf values and inclusive tag
-  defp getValuesToStore(confValues, distinctvalues) do
+  defp getValuesToStore(confValues, distinctValues) do
     inclusive = confValues["inclusive"]
     cond do
-      inclusive == nil or (inclusive and confValues["data"] == ["all"]) ->
-                   distinctvalues
+      inclusive == nil or (inclusive and confValues["data"] == ["all"])
+                    -> ["unknown" | distinctValues]
       inclusive == false and confValues["data"] == ["all"] -> ["unknown"]
       inclusive -> confValues["data"]
-      inclusive == false -> distinctvalues -- confValues["data"] -- ["unknown"]
+      inclusive == false -> distinctValues -- confValues["data"]
     end
   end
 
   ## Given a key of distinct values, check if it's part of values to store
   ## set the bit of retrived bitmap at index
-  defp generateAndStoreValue(store, distinctvalue, keysToStore, bitIndex) do
-    data = getStoredValue(store, distinctvalue)
-           |> setBitAt(boolToBit(distinctvalue in keysToStore), bitIndex)
-    ETS.insert(store, {distinctvalue,  data})
+  defp generateAndStoreValue(store, distinctValue, keysToStore, bitIndex) do
+    data = getStoredValue(store, distinctValue)
+           |> setBitAt(boolToBit(distinctValue in keysToStore), bitIndex)
+    Logger.debug fn -> "[finiteKeyProcessor] - generateAndStoreValue #{distinctValue}:\n#{dumpBitsStr(data)}" end
+    ETS.insert(store, {distinctValue,  data})
   end
 
   ## Get a stored value or initialize it
@@ -119,7 +118,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
     value = getValue(request[indexName])
     [{^value, data}] = ETS.lookup(store, value)
-    
+
     if :first == acc do
       data
     else
