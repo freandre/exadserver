@@ -97,18 +97,25 @@ defmodule ExAdServer.Utils.BitUtils do
   end
 
   @doc """
-    Print a bit structure in binary form
+    Print a string of bit representing the key
   """
-  def dumpBits(key) when is_integer(key) do
-    IO.puts("Key: " <> inspect(Integer.digits(key, 2)))
+  def dumpBits(key) do
+    IO.puts(dumpBitsStr(key))
   end
 
   @doc """
-    Print a bit structure in binary form
+    Generate a string of bit representing the key
   """
-  def dumpBits({key, size}) do
-    IO.puts("Key(" <> Integer.to_string(size) <> "): "
-                   <> inspect(Integer.digits(key, 2)))
+  def dumpBitsStr(key) when is_integer(key) do
+    "Key: " <> inspect(Integer.digits(key, 2))
+  end
+
+  @doc """
+    Generate a string of bit representing the key
+  """
+  def dumpBitsStr({key, size}) do
+    "Key(" <> Integer.to_string(size) <> "): "
+           <> inspect(Integer.digits(key, 2))
   end
 
   ## Private functions

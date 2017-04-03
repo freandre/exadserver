@@ -3,7 +3,7 @@ defmodule ExAdServer.TypedSet.AdServer do
   Implementation of an ad server engine based on sequential set intersection.
   Finite values are dernormalized to find adid
   """
-
+  require Logger
   import ExAdServer.Utils.Storage
   alias :ets, as: ETS
 
@@ -51,7 +51,7 @@ defmodule ExAdServer.TypedSet.AdServer do
   ## structure
   def init(targetMetadata) do
     {_, indexes} = getStore("adsStore")
-    {_, indexes} = getStore("ixToAdsStore", indexes)
+    {_, indexes} = getStore("bitIxToAdsStore", indexes)
     metadata = getMetadata(targetMetadata)
     {:ok, [maxIndex: 0, indexes: indexes, targetMetadata: metadata]}
   end
@@ -63,7 +63,7 @@ defmodule ExAdServer.TypedSet.AdServer do
     indexes = state[:indexes]
 
     {ads_store, _} = getStore("adsStore", indexes)
-    {ix_ads_store, indexes} = getStore("ixToAdsStore", indexes)
+    {ix_ads_store, indexes} = getStore("bitIxToAdsStore", indexes)
 
     ETS.insert(ads_store, {adConf["adid"],  adConf})
     ETS.insert(ix_ads_store, {num_ads, adConf["adid"]})
@@ -95,8 +95,9 @@ defmodule ExAdServer.TypedSet.AdServer do
     with :ok <- validateRequest(adRequest, indexes) do
       ret = Enum.reduce_while(target_metadata, :first,
                       fn({indexName, indexProcessor, indexMetaData}, acc) ->
-                        set = indexProcessor.findInIndex(adRequest,
-                                          {indexName, indexMetaData}, indexes, acc)
+                        {time, set} = :timer.tc( fn -> indexProcessor.findInIndex(adRequest,
+                                          {indexName, indexMetaData}, indexes, acc) end)
+                                          IO.puts(Integer.to_string(time))
                         if MapSet.size(set) == 0 do
                           {:halt, set}
                         else
@@ -116,9 +117,15 @@ defmodule ExAdServer.TypedSet.AdServer do
   ## intensive geolocation. Finite set are  aggregated to handle bitwise
   ## filtering
   defp getMetadata(targetMetadata) do
-    ExAdServer.TypedSet.FiniteKeyProcessor.generateMetadata(targetMetadata) ++
+    Logger.debug fn -> "[adserver] - Entering getMetadata:\n #{inspect(targetMetadata)}" end
+
+    ret = ExAdServer.TypedSet.FiniteKeyProcessor.generateMetadata(targetMetadata) ++
     ExAdServer.TypedSet.InfiniteKeyProcessor.generateMetadata(targetMetadata) ++
     ExAdServer.TypedSet.GeoKeyProcessor.generateMetadata(targetMetadata)
+
+    Logger.debug fn -> "[adserver] - Exiting getMetadata:\n#{inspect(ret)}" end
+
+    ret
   end
 
   ## Validate that a filtering request provides a set of know targets
