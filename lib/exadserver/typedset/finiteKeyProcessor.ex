@@ -10,6 +10,15 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   alias :ets, as: ETS
 
   ## Behaviour Callbacks
+
+  def generateMetadata(targeterMetada) do
+    val = targeterMetada
+    |> Enum.filter_map(fn ({_, v}) -> v["type"] == "finite" end,
+                       fn ({k, v}) -> {k, getMappers(v)} end)
+    |> Enum.reduce(%{}, fn ({k, v}, acc) -> Map.put_new(acc, k, v) end)
+    [{"finite", ExAdServer.TypedSet.FiniteKeyProcessor, val}]
+  end
+
   def generateAndStoreIndex(adData, {_, indexMetadata}, indexes) do
     Enum.reduce(indexMetadata, indexes,
                 fn(indexData, acc) ->
@@ -40,6 +49,20 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   end
 
   ## Private functions
+
+  ## Update the metadata with and index number to data and its reverse mapper
+  defp getMappers(v) do
+    {data_to_ix, ix_to_data, _} =
+      Enum.reduce(v["distinctvalues"], {%{"unknown" => 0}, %{"unknown" => 0}, 1},
+                  fn (val, {data_to_ix, ix_to_data, index}) ->
+                    {Map.put(data_to_ix, val, index),
+                     Map.put(ix_to_data, index, val),
+                     index + 1}
+                  end)
+    v
+    |> Map.put("datatoix", data_to_ix)
+    |> Map.put("ixtodata", ix_to_data)
+  end
 
   ## Deal with the processing of only one index
   defp generateAndStoreUniqueIndex({adConf, bitIndex}, {indexName, indexMetadata}, indexes) do

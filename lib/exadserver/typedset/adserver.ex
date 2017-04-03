@@ -79,7 +79,7 @@ defmodule ExAdServer.TypedSet.AdServer do
 
   ## handle_call callback for :getAd, perform a lookup on main  ad table
   def handle_call({:getAd, adId}, _from, state) do
-    {ads_store, _} = getStore("adsStore", state[:indexes])    
+    {ads_store, _} = getStore("adsStore", state[:indexes])
     case ETS.lookup(ads_store, adId) do
       [] -> {:reply, :notfound, state}
       [{^adId, ad}] -> {:reply, ad, state}
@@ -116,20 +116,9 @@ defmodule ExAdServer.TypedSet.AdServer do
   ## intensive geolocation. Finite set are  aggregated to handle bitwise
   ## filtering
   defp getMetadata(targetMetadata) do
-    {finite, infinite, geo} = Enum.reduce(targetMetadata, {[], [], []},
-                fn({k, v}, {finite, infinite, geo}) ->
-                  case v["type"] do
-                    "finite" -> {[{k, ExAdServer.TypedSet.FiniteKeyProcessor, v} | finite], infinite, geo}
-                    "infinite" -> {finite, [{k, ExAdServer.TypedSet.InfiniteKeyProcessor, v} | infinite], geo}
-                    "geo" -> {finite, infinite, [{k, ExAdServer.TypedSet.GeoKeyProcessor, v} | geo]}
-                  end
-                end)
-
-    finite_map = Enum.reduce(finite, %{},
-                fn ({k_to_add,_, v_to_add}, acc) ->
-                  Map.put_new(acc, k_to_add, v_to_add)
-                end)
-    [{"finite", ExAdServer.TypedSet.FiniteKeyProcessor, finite_map} | infinite] ++ geo
+    ExAdServer.TypedSet.FiniteKeyProcessor.generateMetadata(targetMetadata) ++
+    ExAdServer.TypedSet.InfiniteKeyProcessor.generateMetadata(targetMetadata) ++
+    ExAdServer.TypedSet.GeoKeyProcessor.generateMetadata(targetMetadata)
   end
 
   ## Validate that a filtering request provides a set of know targets

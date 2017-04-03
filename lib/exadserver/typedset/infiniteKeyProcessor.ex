@@ -10,6 +10,12 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
 
   ## Behaviour Callbacks
 
+  def generateMetadata(targeterMetada) do
+    targeterMetada
+    |> Enum.filter_map(fn ({_, v}) -> v["type"] == "infinite" end,
+                       fn ({k, v}) -> {k, ExAdServer.TypedSet.InfiniteKeyProcessor, v} end)
+  end
+
   def generateAndStoreIndex(_, {indexName, _}, indexes) do
     Map.put(indexes, indexName, nil)
   end

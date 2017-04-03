@@ -37,6 +37,12 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
 
   ## Behaviour Callbacks
 
+  def generateMetadata(targeterMetada) do
+    targeterMetada
+    |> Enum.filter_map(fn ({_, v}) -> v["type"] == "geo" end,
+                       fn ({k, v}) -> {k, ExAdServer.TypedSet.GeoKeyProcessor, v} end)
+  end
+
   def generateAndStoreIndex({adConf, _}, {indexName, _}, indexes) do
     {store, indexes} = getBagStore(indexName, indexes)
 

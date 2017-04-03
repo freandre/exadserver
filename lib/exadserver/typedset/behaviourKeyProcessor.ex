@@ -5,6 +5,13 @@ defmodule  ExAdServer.TypedSet.BehaviorKeysProcessor do
   """
 
   @doc """
+  Prepare the metadata according to index type
+  first argument is the raw metadata from config
+  returns a list of metadata object and processor
+  """
+  @callback generateMetadata(Map.t) :: List.t
+
+  @doc """
   Prepare an index key or list of key
   first argument is a tuple ad configuration / bit index
   second argument is a tuple index name / index metadata
@@ -12,6 +19,8 @@ defmodule  ExAdServer.TypedSet.BehaviorKeysProcessor do
   returns the index registry as index can be added
   """
   @callback generateAndStoreIndex(Tuple.t, Tuple.t, Map.t) :: Map.t
+
+  # validateRequest
 
   @doc """
   Perform a search in an index
