@@ -113,22 +113,8 @@ defmodule ExAdServer.Utils.BitUtils do
   @doc """
     Returns a list of index of bit having bit value
   """
-  def listOfIndexOf({key, size}, bitToCheck) do
-      #listOfIndexOf(key, bitToCheck, 0, [])
-      {_,_, ret} = Enum.reduce_while(1..size, {key, 0, []},
-          fn (_, {key, index, acc} = input) ->
-            if key == 0 do
-              {:halt, input}
-            else
-              val = key &&& 1
-              updateKey = key >>> 1
-
-              ret = if(val == bitToCheck, do: [index | acc], else: acc)              
-
-              {:cont, {updateKey, index + 1, ret}}
-            end
-          end)
-      ret
+  def listOfIndexOf({key, _}, bitToCheck) do
+      listOfIndexOf(key, bitToCheck, 0, [])
   end
 
   @doc """

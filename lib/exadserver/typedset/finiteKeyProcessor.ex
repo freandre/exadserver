@@ -135,7 +135,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   end
 
   ## Decode a bitfield to a list of ad id
-  defp decodebitField(data, ixToAdIDStore) do    
+  defp decodebitField(data, ixToAdIDStore) do
     listOfIndexOfOne(data)
     |> Enum.reduce(MapSet.new,
              fn(index, acc) ->
