@@ -135,30 +135,12 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   end
 
   ## Decode a bitfield to a list of ad id
-  defp decodebitField({_, size} = data, ixToAdIDStore) do
-    decodebitField(data, size - 1, [])
+  defp decodebitField(data, ixToAdIDStore) do    
+    listOfIndexOfOne(data)
     |> Enum.reduce(MapSet.new,
              fn(index, acc) ->
                [{^index, adId}] = ETS.lookup(ixToAdIDStore, index)
                MapSet.put(acc, adId)
              end)
-  end
-
-  defp decodebitField(data, index, ret) when index >= 0 do
-    bit = getBitAt(data, index)
-    decodebitField(data, index - 1, updateRet(ret, bit, index))
-  end
-
-  defp decodebitField(_, index, ret) when index < 0 do
-    ret
-  end
-
-  ## Update list of index according to bit
-  defp updateRet(ret, bit, index) do
-    if bit == 1 do
-      [index | ret]
-    else
-      ret
-    end
   end
 end

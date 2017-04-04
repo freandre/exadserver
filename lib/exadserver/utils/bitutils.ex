@@ -75,7 +75,7 @@ defmodule ExAdServer.Utils.BitUtils do
     Read bit at position
   """
   def getBitAt({value, _}, position) do
-    (value >>> position) &&& 1 
+    (value >>> position) &&& 1
   end
 
   @doc """
@@ -94,6 +94,41 @@ defmodule ExAdServer.Utils.BitUtils do
   """
   def bitAnd({f1, s1}, {f2, s2}) do
     {f1 &&& f2, max(s1, s2)}
+  end
+
+  @doc """
+    Returns a list of index of bit having 1 value
+  """
+  def listOfIndexOfOne(bits) do
+    listOfIndexOf(bits, 1)
+  end
+
+  @doc """
+    Returns a list of index of bit having 0 value
+  """
+  def listOfIndexOfZero(bits) do
+    listOfIndexOf(bits, 0)
+  end
+
+  @doc """
+    Returns a list of index of bit having bit value
+  """
+  def listOfIndexOf({key, size}, bitToCheck) do
+      #listOfIndexOf(key, bitToCheck, 0, [])
+      {_,_, ret} = Enum.reduce_while(1..size, {key, 0, []},
+          fn (_, {key, index, acc} = input) ->
+            if key == 0 do
+              {:halt, input}
+            else
+              val = key &&& 1
+              updateKey = key >>> 1
+
+              ret = if(val == bitToCheck, do: [index | acc], else: acc)              
+
+              {:cont, {updateKey, index + 1, ret}}
+            end
+          end)
+      ret
   end
 
   @doc """
@@ -135,6 +170,19 @@ defmodule ExAdServer.Utils.BitUtils do
     case size do
       0 -> data
       _ -> generateOne((data <<< 1) ||| 1, size - 1)
+    end
+  end
+
+  ## Internal recursive function that allows list of index generation from key
+  defp listOfIndexOf(key, bitToCheck, index, acc) do
+    if key == 0 do
+      acc
+    else
+      val = key &&& 1
+      listOfIndexOf(key >>> 1, bitToCheck, index + 1,
+                            if(val == bitToCheck,
+                               do: [index | acc],
+                               else: acc))
     end
   end
 end
