@@ -94,7 +94,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
   ## Get a stored value or initialize it
   defp getStoredValue(store, id) do
-    data = ETS.lookup(store, id)    
+    data = ETS.lookup(store, id)
     returnOrInitValue(data)
   end
 
@@ -109,7 +109,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
     value = getValue(request[indexName])
     [{^value, data}] = ETS.lookup(store, value)
 
-     buildFindInUniqueIndex(acc, data)
+    buildFindInUniqueIndex(acc, data)
   end
 
   ## Shall we stop to loop

@@ -74,10 +74,12 @@ defmodule ExAdServer.Utils.BitUtils do
     Bitwise and on the bitstring
   """
   def bitAnd(bits1, bits2) do
-    sz_min = min(bit_size(bits1), bit_size(bits2))
-    bitAnd(sz_min,
-           getLowOrderBits(bits1, sz_min),
-           getLowOrderBits(bits2, sz_min), <<>>)
+    sz = bit_size(bits1)
+    <<val1::size(sz)>> = bits1
+    sz = bit_size(bits2)
+    <<val2::size(sz)>> = bits2
+
+    :binary.encode_unsigned(val1 &&& val2)
   end
 
   @doc """
@@ -111,16 +113,6 @@ defmodule ExAdServer.Utils.BitUtils do
   end
 
   ## Private functions
-
-  ## Recursively compute bit and
-  defp bitAnd(size, bits1, bits2, acc) when size > 0 do
-    sz = size - 1
-    <<rest1::size(sz), tail1::size(1)>> = bits1
-    <<rest2::size(sz), tail2::size(1)>> = bits2
-    bit = tail1 &&& tail2
-    bitAnd(size - 1, <<rest1::size(sz)>>, <<rest2::size(sz)>>, <<bit::size(1), acc::bitstring>>)
-  end
-  defp bitAnd(_, _, _, acc), do: acc
 
   ## Returns a list of bit. Not sure about performances so use with care
   defp getBitsList(bits) do
