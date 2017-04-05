@@ -39,7 +39,7 @@ defmodule ExAdServer.Utils.BitUtils do
   def setBitAt(bits, bit, position) when bit_size(bits) >= position + 1 do
     sz_head = bit_size(bits) - (position + 1)
     <<head::size(sz_head), _::size(1), tail::bitstring>> = bits
-    <<head::bitstring, bit::size(1), tail::bitstring>>
+    <<head::size(sz_head), bit::size(1), tail::bitstring>>
   end
   def setBitAt(bits, bit, position) do
     filler_sz = position - bit_size(bits)
