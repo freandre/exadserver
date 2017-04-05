@@ -6,8 +6,8 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   @behaviour ExAdServer.TypedSet.BehaviorKeysProcessor
 
   require Logger
-  import ExAdServer.Utils.BitUtils
   import ExAdServer.Utils.Storage
+  alias ExAdServer.Utils.BitUtils
   alias :ets, as: ETS
 
   ## Behaviour Callbacks
@@ -87,20 +87,19 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   ## set the bit of retrived bitmap at index
   defp generateAndStoreValue(store, distinctValue, bitIndex) do
     data = getStoredValue(store, distinctValue)
-           |> setBitAt(1, bitIndex)
-    Logger.debug fn -> "[finiteKeyProcessor] - generateAndStoreValue #{distinctValue}:\n#{dumpBitsStr(data)}" end
+           |> BitUtils.setBitAt(1, bitIndex)
+    Logger.debug fn -> "[finiteKeyProcessor] - generateAndStoreValue #{distinctValue}:\n#{BitUtils.dumpBitsStr(data)}" end
     ETS.insert(store, {distinctValue,  data})
   end
 
   ## Get a stored value or initialize it
   defp getStoredValue(store, id) do
-    data = ETS.lookup(store, id)
-
+    data = ETS.lookup(store, id)    
     returnOrInitValue(data)
   end
 
   ## If data is empty, initialize it
-  defp returnOrInitValue([]), do: {0, 0}
+  defp returnOrInitValue([]), do: BitUtils.new
   defp returnOrInitValue(data), do: elem(Enum.at(data, 0), 1)
 
   ## Find data in a unique index
@@ -123,7 +122,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
   ## Are we in the first iteration ?
   defp buildFindInUniqueIndex(:first, data), do: data
-  defp buildFindInUniqueIndex(acc, data), do: bitAnd(data, acc)
+  defp buildFindInUniqueIndex(acc, data), do: BitUtils.bitAnd(data, acc)
 
   ## Simple filter to handle unknown value
   defp getValue(nil), do: "unknown"
@@ -131,7 +130,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
   ## Decode a bitfield to a list of ad id
   defp decodebitField(data, ixToAdIDStore) do
-    listOfIndexOfOne(data)
+    BitUtils.listOfIndexOfOne(data)
     |> Enum.reduce(MapSet.new,
              fn(index, acc) ->
                [{^index, adId}] = ETS.lookup(ixToAdIDStore, index)

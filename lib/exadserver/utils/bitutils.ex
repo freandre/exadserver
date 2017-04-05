@@ -5,117 +5,95 @@ defmodule ExAdServer.Utils.BitUtils do
 
   use Bitwise
 
+  @bit_one <<1::integer-size(1)>>
+  @bit_zero <<0::integer-size(1)>>
+
+  @doc """
+  Get a new bit structure
+  """
+  def new, do: <<>>
+
   @doc """
   Generate a tuple {data, size} of values of size size with 1
   """
-  def generateAllWithOne(size) when size >= 0 do
-    generateAll(size, true)
-  end
+  def generateAllWithOne(size) when size >= 0, do: generateSizeBits(size, 1, <<>>)
 
   @doc """
   Generate a tuple {data, size} of values of size size with 0
   """
-  def generateAllWithZero(size) when size >= 0 do
-    generateAll(size, false)
-  end
+  def generateAllWithZero(size) when size >= 0, do: generateSizeBits(size, 0, <<>>)
 
   @doc """
   Add a 1 bit
   """
-  def addOne({data, size}) do
-    {(data <<< 1) ||| 1, size + 1}
-  end
+  def addOne(data), do: <<data::bitstring, @bit_one::bitstring>>
 
   @doc """
   Add a 0 bit
   """
-  def addZero({data, size}) do
-    {(data <<< 1), size + 1}
-  end
-
-  @doc """
-  Negate the data of the tuple is no_change is false
-  """
-  def conditionalNot({data, size} = value, change) do
-    if (change) do
-      negate({data, size})
-    else
-      value
-    end
-  end
-
-  @doc """
-    Logical negation of a bit structure
-  """
-  def negate({key, size}) do
-    {ones, _} = generateAllWithOne(size)
-    {ones ^^^ key, size}
-  end
-
-  @doc """
-    Aggregator for tuple {data, size}
-  """
-  def aggregateAccumulators({firstData, firstSize}, {secData, secSize}) do
-    {(firstData <<< secSize) ||| secData, firstSize + secSize}
-  end
+  def addZero(data), do: <<data::bitstring, @bit_zero::bitstring>>
 
   @doc """
     Put a specific bit at position
   """
-  def setBitAt({value, size}, bit, position) do
-    if bit == 1 do
-      {value ||| (1 <<< position), max(size, position + 1)}
-    else
-      # 1's complement for bitwise not
-      {value &&& elem(negate({1 <<< position, position + 1}), 0), max(size, position + 1)}
-    end
+  def setBitAt(bits, bit, position) when bit_size(bits) >= position + 1 do
+    sz_head = bit_size(bits) - (position + 1)
+    <<head::size(sz_head), _::size(1), tail::bitstring>> = bits
+    <<head::bitstring, bit::size(1), tail::bitstring>>
+  end
+  def setBitAt(bits, bit, position) do
+    filler_sz = position - bit_size(bits)
+     <<bit::size(1), 0::size(filler_sz), bits::bitstring>>
   end
 
   @doc """
     Read bit at position
   """
-  def getBitAt({value, _}, position) do
-    (value >>> position) &&& 1
+  def getBitAt(bits, position) do
+    sz_head = bit_size(bits) - (position + 1)
+    <<_::size(sz_head), ret::size(1), _::bitstring>> = bits
+    ret
   end
 
   @doc """
     Convert a boolean value to bit
   """
-  def boolToBit(value) when is_boolean(value)do
-    if value do
-      1
-    else
-      0
-    end
+  def boolToBit(true), do: @bit_one
+  def boolToBit(false), do: @bit_zero
+
+  @doc """
+    Return firt n low order bits from a binary
+  """
+  def getLowOrderBits(bits, nbBits) do
+    sz = bit_size(bits) - nbBits
+    <<_::size(sz), ret::size(nbBits)>> = bits
+    <<ret::size(nbBits)>>
   end
 
   @doc """
-    Bitwise and on the structure
+    Bitwise and on the bitstring
   """
-  def bitAnd({f1, s1}, {f2, s2}) do
-    {f1 &&& f2, max(s1, s2)}
+  def bitAnd(bits1, bits2) do
+    sz_min = min(bit_size(bits1), bit_size(bits2))
+    bitAnd(sz_min,
+           getLowOrderBits(bits1, sz_min),
+           getLowOrderBits(bits2, sz_min), <<>>)
   end
 
   @doc """
     Returns a list of index of bit having 1 value
   """
-  def listOfIndexOfOne(bits) do
-    listOfIndexOf(bits, 1)
-  end
+  def listOfIndexOfOne(bits), do: listOfIndexOf(1, bits)
 
   @doc """
     Returns a list of index of bit having 0 value
   """
-  def listOfIndexOfZero(bits) do
-    listOfIndexOf(bits, 0)
-  end
+  def listOfIndexOfZero(bits), do: listOfIndexOf(0, bits)
 
   @doc """
     Returns a list of index of bit having bit value
   """
-  def listOfIndexOf({key, _}, bitToCheck) do
-      listOfIndexOf(key, bitToCheck, 0, [])
-  end
+  def listOfIndexOf(bit, bits), do: listOfIndexOf(bit, bits, bit_size(bits) - 1, [])
 
   @doc """
     Print a string of bit representing the key
@@ -127,48 +105,37 @@ defmodule ExAdServer.Utils.BitUtils do
   @doc """
     Generate a string of bit representing the key
   """
-  def dumpBitsStr(key) when is_integer(key) do
-    "Key: " <> inspect(Integer.digits(key, 2))
-  end
-
-  @doc """
-    Generate a string of bit representing the key
-  """
-  def dumpBitsStr({key, size}) do
-    "Key(" <> Integer.to_string(size) <> "): "
-           <> inspect(Integer.digits(key, 2))
+  def dumpBitsStr(bits) do
+    "Key(" <> Integer.to_string(bit_size(bits)) <> "): "
+           <> inspect(getBitsList(bits))
   end
 
   ## Private functions
 
-  ## Generate a tuple {data, size} of values of size size with 1 if fillWithOne
-  ## is true, 0 else
-  defp generateAll(size, fillWithOne) when size >= 0 do
-    if fillWithOne do
-      {generateOne(0, size), size}
-    else
-      {0, size}
-    end
+  ## Recursively compute bit and
+  defp bitAnd(size, bits1, bits2, acc) when size > 0 do
+    sz = size - 1
+    <<rest1::size(sz), tail1::size(1)>> = bits1
+    <<rest2::size(sz), tail2::size(1)>> = bits2
+    bit = tail1 &&& tail2
+    bitAnd(size - 1, <<rest1::size(sz)>>, <<rest2::size(sz)>>, <<bit::size(1), acc::bitstring>>)
+  end
+  defp bitAnd(_, _, _, acc), do: acc
+
+  ## Returns a list of bit. Not sure about performances so use with care
+  defp getBitsList(bits) do
+    sz = bit_size(bits)
+    <<val::size(sz)>> = bits
+    Integer.digits(val, 2)
   end
 
-  ## Generate a tuple {data, size} of 1's of size size by shifting data
-  defp generateOne(data, size) do
-    case size do
-      0 -> data
-      _ -> generateOne((data <<< 1) ||| 1, size - 1)
-    end
-  end
+  ## Generate a binary filled up with bit
+  defp generateSizeBits(size, bit, acc) when size > 0, do: generateSizeBits(size - 1, bit, <<bit::integer-size(1), acc::bitstring>>)
+  defp generateSizeBits(_, _, acc), do: acc
 
-  ## Internal recursive function that allows list of index generation from key
-  defp listOfIndexOf(key, bitToCheck, index, acc) do
-    if key == 0 do
-      acc
-    else
-      val = key &&& 1
-      listOfIndexOf(key >>> 1, bitToCheck, index + 1,
-                            if(val == bitToCheck,
-                               do: [index | acc],
-                               else: acc))
-    end
-  end
+  ## Returns a list of index representing the bits set
+  defp listOfIndexOf(_, <<>>, _index, acc), do: acc
+  defp listOfIndexOf(bit, <<bit::integer-size(1), rest::bitstring>>, index, acc), do: listOfIndexOf(bit, rest, index - 1, [index | acc])
+  defp listOfIndexOf(bit, <<_::integer-size(1), rest::bitstring>>, index, acc), do: listOfIndexOf(bit, rest, index - 1, acc)
+
 end
