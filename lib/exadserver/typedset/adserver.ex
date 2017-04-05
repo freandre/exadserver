@@ -97,11 +97,8 @@ defmodule ExAdServer.TypedSet.AdServer do
                       fn({indexName, indexProcessor, indexMetaData}, acc) ->
                         set = indexProcessor.findInIndex(adRequest,
                                           {indexName, indexMetaData}, indexes, acc)
-                        if MapSet.size(set) == 0 do
-                          {:halt, set}
-                        else
-                          {:cont, set}
-                        end
+
+                        checkMainStopCondition(set, MapSet.size(set))
                       end)
       {:reply, ret, state}
     else
@@ -139,4 +136,8 @@ defmodule ExAdServer.TypedSet.AdServer do
       _ -> "The following target attributes are not available: " <> answer
     end
   end
+
+  ## Shall we stop to loop
+  defp checkMainStopCondition(set, setsize) when setsize == 0, do: {:halt, set}
+  defp checkMainStopCondition(set, _), do: {:cont, set}
 end

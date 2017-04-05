@@ -41,19 +41,11 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
                       data = findInUniqueIndex(adRequest,
                                         val, indexes, acc)
                       Logger.debug fn -> "#{indexName} => #{inspect(decodebitField(data, ix_ads_store))}" end
-                      if elem(data, 0) == 0 do
-                        {:halt, data}
-                      else
-                        {:cont, data}
-                      end
+                      checkMainStopCondition(data)
                     end)
     |> decodebitField(ix_ads_store)
 
-    if acc == :first do
-      ret
-    else
-      MapSet.intersection(ret, acc)
-    end
+    buildFindInIndex(acc, ret)
   end
 
   ## Private functions
@@ -104,12 +96,12 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   defp getStoredValue(store, id) do
     data = ETS.lookup(store, id)
 
-    if data == [] do
-      {0, 0}
-    else
-      elem(Enum.at(data, 0), 1)
-    end
+    returnOrInitValue(data)
   end
+
+  ## If data is empty, initialize it
+  defp returnOrInitValue([]), do: {0, 0}
+  defp returnOrInitValue(data), do: elem(Enum.at(data, 0), 1)
 
   ## Find data in a unique index
   defp findInUniqueIndex(request, {indexName, _}, indexes, acc) do
@@ -118,21 +110,24 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
     value = getValue(request[indexName])
     [{^value, data}] = ETS.lookup(store, value)
 
-    if :first == acc do
-      data
-    else
-      bitAnd(data, acc)
-    end
+     buildFindInUniqueIndex(acc, data)
   end
 
+  ## Shall we stop to loop
+  defp checkMainStopCondition(data) when elem(data, 0) == 0, do: {:halt, data}
+  defp checkMainStopCondition(data), do: {:cont, data}
+
+  ## Are we in the first iteration ?
+  defp buildFindInIndex(:first, data), do: data
+  defp buildFindInIndex(acc, data), do: MapSet.intersection(data, acc)
+
+  ## Are we in the first iteration ?
+  defp buildFindInUniqueIndex(:first, data), do: data
+  defp buildFindInUniqueIndex(acc, data), do: bitAnd(data, acc)
+
   ## Simple filter to handle unknown value
-  defp getValue(requestValue) do
-    if requestValue == nil do
-      "unknown"
-    else
-      requestValue
-    end
-  end
+  defp getValue(nil), do: "unknown"
+  defp getValue(requestValue), do: requestValue
 
   ## Decode a bitfield to a list of ad id
   defp decodebitField(data, ixToAdIDStore) do
