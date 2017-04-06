@@ -103,7 +103,6 @@ defmodule ExAdServer.Utils.BitUtils do
   defp generateOneBits(_, acc), do: acc
 
   ## Returns a list of index representing the bits set
-
   defp listOfIndexOf(<<>>, _, _index, acc), do: acc
   defp listOfIndexOf(<<bit::integer-size(1), rest::bitstring>>, bit, index, acc), do: listOfIndexOf(rest, bit, index - 1, [index | acc])
   defp listOfIndexOf(<<_::integer-size(1), rest::bitstring>>, bit, index, acc), do: listOfIndexOf(rest, bit, index - 1, acc)

@@ -4,7 +4,7 @@ defmodule TypedSetAdServerBench do
   alias ExAdServer.Config.ConfigServer
   alias ExAdServer.TypedSet.AdServer, as: TypedSetAdServer
 
-  @numberOfAds 1000
+  @numberOfAds 20000
 
   setup_all do
     {:ok, configserver} = ConfigServer.start_link({"./test/resources/targetingData.json", @numberOfAds})
@@ -19,7 +19,7 @@ defmodule TypedSetAdServerBench do
   before_each_bench bench_context do
     config = bench_context[:configServer]
 
-    val = ["country", "language", "hour", "minute"]
+    val = ["country", "language", "iab", "hour", "minute"]
     |> Enum.reduce(%{}, &(Map.put(&2, &1, pickValue(ConfigServer.getMetadata(config, &1)["distinctvalues"]))))
 
     {:ok, [config: val, adServer: bench_context[:adServer]]}
@@ -57,6 +57,17 @@ defmodule TypedSetAdServerBench do
     cfg = bench_context[:configServer]
     TypedSetAdServer.filterAd(bench_context[:adServer], %{"country" => cfg["country"],
                                                        "language" => cfg["language"],
+                                                       "hour" => cfg["hour"],
+                                                       "minute" => cfg["minute"],
+                                                       "support" => "google.com"})
+    :ok
+  end
+
+  bench "TypedSet filtering on 6 targets (5 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
+    cfg = bench_context[:configServer]
+    TypedSetAdServer.filterAd(bench_context[:adServer], %{"country" => cfg["country"],
+                                                       "language" => cfg["language"],
+                                                       "iab" => cfg["iab"],
                                                        "hour" => cfg["hour"],
                                                        "minute" => cfg["minute"],
                                                        "support" => "google.com"})
