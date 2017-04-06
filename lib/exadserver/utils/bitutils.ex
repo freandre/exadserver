@@ -2,6 +2,7 @@ defmodule ExAdServer.Utils.BitUtils do
   @moduledoc """
   Bit manipulation utility module.
   """
+  @compile :native
 
   use Bitwise
 
