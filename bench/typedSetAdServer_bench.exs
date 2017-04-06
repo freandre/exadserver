@@ -4,7 +4,7 @@ defmodule TypedSetAdServerBench do
   alias ExAdServer.Config.ConfigServer
   alias ExAdServer.TypedSet.AdServer, as: TypedSetAdServer
 
-  @numberOfAds 50000
+  @numberOfAds 1000
 
   setup_all do
     {:ok, configserver} = ConfigServer.start_link({"./test/resources/targetingData.json", @numberOfAds})

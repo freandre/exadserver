@@ -11,22 +11,22 @@ defmodule ExAdServer.Utils.BitUtils do
   @doc """
   Get a new bit structure : {data, size}
   """
-  def new, do: {0, 0}
+  def new(), do: {0, 0}
 
   @doc """
   Generate a tuple {data, size} of values of size size with 1
   """
-  def generateAllWithOne(size) when size >= 0, do: generateSizeBits(size, @bit_one, new())
+  def generateAllWithOne(size) when size >= 0, do: generateOneBits(size, new())
 
   @doc """
   Generate a tuple {data, size} of values of size size with 0
   """
-  def generateAllWithZero(size) when size >= 0, do: generateSizeBits(size, @bit_zero, new())
+  def generateAllWithZero(size) when size >= 0, do: {@bit_zero, size}
 
   @doc """
   Add a 1 bit
   """
-  def addOne({data, size}), do: {:erlang.band(:erlang.bsl(data, 1), @bit_one), size + 1}
+  def addOne({data, size}), do: {:erlang.bor(:erlang.bsl(data, 1), @bit_one), size + 1}
 
   @doc """
   Add a 0 bit
@@ -36,11 +36,12 @@ defmodule ExAdServer.Utils.BitUtils do
   @doc """
     Put a specific bit at position
   """
-  def setBitAt({data, size}, bit, position) when bit == @bit_one, do: {:erlang.bor(data, :erlang.bsl(1, position)), :erlang.max(size, position + 1)}
-  def setBitAt({data, size}, bit, position) do
-    head = :erlang.bsl(:erlang.bor(:erlang.bsl(:erlang.bsr(data, (position + 1)), 1), bit), position)
-    tail = :erlang.band(data, elem(generateAllWithOne(position), 0))
-    {:erlang.bor(head, tail), :erlang.max(size, position + 1)}
+  def setBitAt({data, size}, @bit_one, position),do: {:erlang.bor(data, :erlang.bsl(1, position)), :erlang.max(size, position + 1)}
+  def setBitAt({_, size} = val, @bit_zero, position) when position >= size, do: val
+  def setBitAt({data, size} = val, @bit_zero, position) do
+    head = :erlang.bsl(:erlang.bsr(data, position + 1), position + 1)
+    {tail, _} = bitAnd(val, generateAllWithOne(position))
+    {:erlang.bor(head, tail), size}
   end
 
   @doc """
@@ -64,12 +65,12 @@ defmodule ExAdServer.Utils.BitUtils do
   @doc """
     Returns a list of index of bit having 1 value
   """
-  def listOfIndexOfOne(bits), do: listOfIndexOf(bits, 1)
+  def listOfIndexOfOne(bits), do: listOfIndexOf(bits, @bit_one)
 
   @doc """
     Returns a list of index of bit having 0 value
   """
-  def listOfIndexOfZero(bits), do: listOfIndexOf(bits, 0)
+  def listOfIndexOfZero(bits), do: listOfIndexOf(bits, @bit_zero)
 
   @doc """
     Returns a list of index of bit having bit value
@@ -97,9 +98,8 @@ defmodule ExAdServer.Utils.BitUtils do
   ## Private functions
 
   ## Generate a structure filled up with bit
-  defp generateSizeBits(size, 0, acc) when size > 0, do: generateSizeBits(size - 1, 0, addOne(acc))
-  defp generateSizeBits(size, 1, acc) when size > 0, do: generateSizeBits(size - 1, 1, addZero(acc))
-  defp generateSizeBits(_, _, acc), do: acc
+  defp generateOneBits(size, acc) when size > 0, do: generateOneBits(size - 1, addOne(acc))
+  defp generateOneBits(_, acc), do: acc
 
   ## Returns a list of index representing the bits set
 
