@@ -59,27 +59,32 @@ defmodule ExAdServer.Utils.BitUtils do
   def boolToBit(false), do: @bit_zero
 
   @doc """
-    Bitwise and on the bitstring
+    Bitwise and on the bit structure
   """
   def bitAnd({data1, sz1}, {data2, sz2}), do: {:erlang.band(data1, data2), :erlang.min(sz1, sz2)}
 
   @doc """
-    Returns a list of index of bit having 1 value
+    Returns a list of index (begining at indexPos) of bit having 1 value
   """
-  def listOfIndexOfOne(bits), do: listOfIndexOf(bits, @bit_one)
+  def listOfIndexOfOne(bits, beginingPos \\ 0), do: listOfIndexOf(bits, @bit_one, beginingPos)
 
   @doc """
-    Returns a list of index of bit having 0 value
+    Returns a list of index (begining at indexPos) of bit having 0 value
   """
-  def listOfIndexOfZero(bits), do: listOfIndexOf(bits, @bit_zero)
+  def listOfIndexOfZero(bits, beginingPos \\ 0), do: listOfIndexOf(bits, @bit_zero, beginingPos)
 
   @doc """
-    Returns a list of index of bit having bit value
+    Returns a list of index (begining at indexPos) of bit having bit value
   """
-  def listOfIndexOf({data, size}, bit) do
-    bits = <<data::size(size)>>
-    listOfIndexOf(bits, bit, size - 1, [])
+  def listOfIndexOf({data, size}, bit, beginingPos \\ 0) do
+    listOfIndexOf(<<data::size(size)>>, bit, size - 1, beginingPos, [])
   end
+
+  @doc """
+    Split a bits structure in several block of size blockSize bits
+    Returns a list of {bitStruct, beginingIndex}
+  """
+  def splitBits(bits, blockSize), do: splitBits(bits, generateAllWithOne(blockSize), blockSize, 0, [])
 
   @doc """
     Print a string of bit representing the key
@@ -103,8 +108,21 @@ defmodule ExAdServer.Utils.BitUtils do
   defp generateOneBits(_, acc), do: acc
 
   ## Returns a list of index representing the bits set
-  defp listOfIndexOf(<<>>, _, _index, acc), do: acc
-  defp listOfIndexOf(<<bit::integer-size(1), rest::bitstring>>, bit, index, acc), do: listOfIndexOf(rest, bit, index - 1, [index | acc])
-  defp listOfIndexOf(<<_::integer-size(1), rest::bitstring>>, bit, index, acc), do: listOfIndexOf(rest, bit, index - 1, acc)
+  defp listOfIndexOf(<<>>, _, _, _, acc), do: acc
+  defp listOfIndexOf(<<bit::integer-size(1), rest::bitstring>>, bit, index, start_index, acc) do
+    listOfIndexOf(rest, bit, index - 1, start_index, [start_index + index | acc])
+  end
+  defp listOfIndexOf(<<_::integer-size(1), rest::bitstring>>, bit, index, start_index, acc) do
+    listOfIndexOf(rest, bit, index - 1, start_index, acc)
+  end
 
+  ## Recursively split integer in chunks
+  defp splitBits({_, size}, _, _, _, acc) when size == 0, do: acc
+  defp splitBits({data, size} = bits, mask, blockSize, blockNumber, acc) when size >= blockSize do
+    splitBits({data >>> blockSize, size - blockSize}, mask, blockSize,
+        blockNumber + 1, [{bitAnd(bits, mask), blockSize * blockNumber} | acc])
+  end
+  defp splitBits({_, size} = bits, mask, blockSize, blockNumber, acc) when size < blockSize do
+    splitBits(new(), mask, blockSize, blockNumber + 1, [{bitAnd(bits, mask), blockSize * blockNumber} | acc])
+  end
 end
