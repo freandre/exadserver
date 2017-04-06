@@ -5,54 +5,49 @@ defmodule ExAdServer.Utils.BitUtils do
 
   use Bitwise
 
-  @bit_one <<1::integer-size(1)>>
-  @bit_zero <<0::integer-size(1)>>
+  @bit_one 1
+  @bit_zero 0
 
   @doc """
-  Get a new bit structure
+  Get a new bit structure : {data, size}
   """
-  def new, do: <<>>
+  def new, do: {0, 0}
 
   @doc """
   Generate a tuple {data, size} of values of size size with 1
   """
-  def generateAllWithOne(size) when size >= 0, do: generateSizeBits(size, 1, <<>>)
+  def generateAllWithOne(size) when size >= 0, do: generateSizeBits(size, @bit_one, new())
 
   @doc """
   Generate a tuple {data, size} of values of size size with 0
   """
-  def generateAllWithZero(size) when size >= 0, do: generateSizeBits(size, 0, <<>>)
+  def generateAllWithZero(size) when size >= 0, do: generateSizeBits(size, @bit_zero, new())
 
   @doc """
   Add a 1 bit
   """
-  def addOne(data), do: <<data::bitstring, @bit_one::bitstring>>
+  def addOne({data, size}), do: {:erlang.band(:erlang.bsl(data, 1), @bit_one), size + 1}
 
   @doc """
   Add a 0 bit
   """
-  def addZero(data), do: <<data::bitstring, @bit_zero::bitstring>>
+  def addZero({data, size}), do: {:erlang.bsl(data, 1), size + 1}
 
   @doc """
     Put a specific bit at position
   """
-  def setBitAt(bits, bit, position) when bit_size(bits) >= position + 1 do
-    sz_head = bit_size(bits) - (position + 1)
-    <<head::size(sz_head), _::size(1), tail::bitstring>> = bits
-    <<head::size(sz_head), bit::size(1), tail::bitstring>>
-  end
-  def setBitAt(bits, bit, position) do
-    filler_sz = position - bit_size(bits)
-     <<bit::size(1), 0::size(filler_sz), bits::bitstring>>
+  def setBitAt({data, size}, bit, position) when bit == @bit_one, do: {:erlang.bor(data, :erlang.bsl(1, position)), :erlang.max(size, position + 1)}
+  def setBitAt({data, size}, bit, position) do
+    head = :erlang.bsl(:erlang.bor(:erlang.bsl(:erlang.bsr(data, (position + 1)), 1), bit), position)
+    tail = :erlang.band(data, elem(generateAllWithOne(position), 0))
+    {:erlang.bor(head, tail), :erlang.max(size, position + 1)}
   end
 
   @doc """
     Read bit at position
   """
-  def getBitAt(bits, position) do
-    sz_head = bit_size(bits) - (position + 1)
-    <<_::size(sz_head), ret::size(1), _::bitstring>> = bits
-    ret
+  def getBitAt({data, _size}, position) do
+    :erlang.band(data, :erlang.bsl(1, position))
   end
 
   @doc """
@@ -62,72 +57,54 @@ defmodule ExAdServer.Utils.BitUtils do
   def boolToBit(false), do: @bit_zero
 
   @doc """
-    Return firt n low order bits from a binary
-  """
-  def getLowOrderBits(bits, nbBits) do
-    sz = bit_size(bits) - nbBits
-    <<_::size(sz), ret::size(nbBits)>> = bits
-    <<ret::size(nbBits)>>
-  end
-
-  @doc """
     Bitwise and on the bitstring
   """
-  def bitAnd(bits1, bits2) do
-    sz = bit_size(bits1)
-    <<val1::size(sz)>> = bits1
-    sz = bit_size(bits2)
-    <<val2::size(sz)>> = bits2
-
-    :binary.encode_unsigned(val1 &&& val2)
-  end
+  def bitAnd({data1, sz1}, {data2, sz2}), do: {:erlang.band(data1, data2), :erlang.min(sz1, sz2)}
 
   @doc """
     Returns a list of index of bit having 1 value
   """
-  def listOfIndexOfOne(bits), do: listOfIndexOf(1, bits)
+  def listOfIndexOfOne(bits), do: listOfIndexOf(bits, 1)
 
   @doc """
     Returns a list of index of bit having 0 value
   """
-  def listOfIndexOfZero(bits), do: listOfIndexOf(0, bits)
+  def listOfIndexOfZero(bits), do: listOfIndexOf(bits, 0)
 
   @doc """
     Returns a list of index of bit having bit value
   """
-  def listOfIndexOf(bit, bits), do: listOfIndexOf(bit, bits, bit_size(bits) - 1, [])
+  def listOfIndexOf({data, size}, bit) do
+    bits = <<data::size(size)>>
+    listOfIndexOf(bits, bit, size - 1, [])
+  end
 
   @doc """
     Print a string of bit representing the key
   """
-  def dumpBits(key) do
-    IO.puts(dumpBitsStr(key))
+  def dumpBits(bits) do
+    IO.puts(dumpBitsStr(bits))
   end
 
   @doc """
     Generate a string of bit representing the key
   """
-  def dumpBitsStr(bits) do
-    "Key(" <> Integer.to_string(bit_size(bits)) <> "): "
-           <> inspect(getBitsList(bits))
+  def dumpBitsStr({data, sz}) do
+    "Key(" <> Integer.to_string(sz) <> "): "
+           <> inspect(Integer.digits(data, 2))
   end
 
   ## Private functions
 
-  ## Returns a list of bit. Not sure about performances so use with care
-  defp getBitsList(bits) do
-    sz = bit_size(bits)
-    <<val::size(sz)>> = bits
-    Integer.digits(val, 2)
-  end
-
-  ## Generate a binary filled up with bit
-  defp generateSizeBits(size, bit, acc) when size > 0, do: generateSizeBits(size - 1, bit, <<bit::integer-size(1), acc::bitstring>>)
+  ## Generate a structure filled up with bit
+  defp generateSizeBits(size, 0, acc) when size > 0, do: generateSizeBits(size - 1, 0, addOne(acc))
+  defp generateSizeBits(size, 1, acc) when size > 0, do: generateSizeBits(size - 1, 1, addZero(acc))
   defp generateSizeBits(_, _, acc), do: acc
 
   ## Returns a list of index representing the bits set
-  defp listOfIndexOf(_, <<>>, _index, acc), do: acc
-  defp listOfIndexOf(bit, <<bit::integer-size(1), rest::bitstring>>, index, acc), do: listOfIndexOf(bit, rest, index - 1, [index | acc])
-  defp listOfIndexOf(bit, <<_::integer-size(1), rest::bitstring>>, index, acc), do: listOfIndexOf(bit, rest, index - 1, acc)
+
+  defp listOfIndexOf(<<>>, _, _index, acc), do: acc
+  defp listOfIndexOf(<<bit::integer-size(1), rest::bitstring>>, bit, index, acc), do: listOfIndexOf(rest, bit, index - 1, [index | acc])
+  defp listOfIndexOf(<<_::integer-size(1), rest::bitstring>>, bit, index, acc), do: listOfIndexOf(rest, bit, index - 1, acc)
 
 end
