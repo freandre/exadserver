@@ -89,6 +89,9 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
                       inclusive == false and
                           MapSet.size(MapSet.intersection(conf_hashes, hashes)) != 0
                               -> MapSet.delete(acc, ad_id)
+                      inclusive == true and
+                          MapSet.size(MapSet.intersection(conf_hashes, hashes)) == 0
+                              -> MapSet.delete(acc, ad_id)
                       true -> acc
                     end
                 end)
