@@ -16,7 +16,7 @@
       ]
    },
    "geo":{
-      "type":"infinite",
+      "type":"geo",
       "data":[
          "sig1",
          "sig1"

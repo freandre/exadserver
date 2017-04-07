@@ -19,7 +19,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
     |> Enum.reduce(%{}, fn ({k, v}, acc) -> Map.put(acc, k, v) end)
     ret = [{"finite", ExAdServer.TypedSet.FiniteKeyProcessor, val}]
 
-    Logger.debug fn -> "[finiteKeyProcessor] - Exiting generateMetadata returning:\n#{inspect(ret)}" end
+    Logger.debug fn -> "[FiniteKeyProcessor] - Exiting generateMetadata returning:\n#{inspect(ret)}" end
 
     ret
   end
@@ -34,14 +34,14 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   def findInIndex(adRequest, {_, indexMetadata}, indexes, acc) do
     {ix_ads_store, indexes} = getStore("bitIxToAdsStore", indexes)
 
-    Logger.debug fn -> "[finiteKeyProcessor] - findInIndex request:\n#{inspect(adRequest)}" end
+    Logger.debug fn -> "[FiniteKeyProcessor] - findInIndex request:\n#{inspect(adRequest)}" end
 
     ret = indexMetadata
           |> Enum.reduce_while(:first,
                     fn({index_name, _} = val, acc) ->
                       data = findInUniqueIndex(adRequest,
                                         val, indexes, acc)
-                      Logger.debug fn -> "#{index_name} => #{inspect(decodebitField(data, ix_ads_store))}" end
+                      Logger.debug fn -> "> #{index_name} => #{inspect(decodebitField(data, ix_ads_store))}" end
                       checkMainStopCondition(data)
                     end)
           |> decodebitField(ix_ads_store)
@@ -58,15 +58,15 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
   ## Deal with the processing of only one index
   defp generateAndStoreUniqueIndex({adConf, bitIndex}, {indexName, indexMetadata}, indexes) do
-    Logger.debug "[finiteKeyProcessor] - generateAndStoreUniqueIndex: #{indexName}"
-    Logger.debug fn ->  "conf:\n#{inspect(adConf["targeting"][indexName])}" end
+    Logger.debug "[FiniteKeyProcessor] - generateAndStoreUniqueIndex: #{indexName}"
+    Logger.debug fn ->  "> Conf:\n#{inspect(adConf["targeting"][indexName])}" end
 
     {store, indexes} = getStore(indexName, indexes)
     distinct_values = indexMetadata["distinctvalues"]
     values_to_store = adConf["targeting"][indexName]
                       |> getValuesToStore(distinct_values)
-    Logger.debug fn -> "distinct values:\n#{inspect(distinct_values)}" end
-    Logger.debug fn -> "Values to store:\n#{inspect(values_to_store)}" end
+    Logger.debug fn -> "> Distinct values:\n#{inspect(distinct_values)}" end
+    Logger.debug fn -> "> Values to store:\n#{inspect(values_to_store)}" end
 
     Enum.each(values_to_store, &(generateAndStoreValue(store, &1, bitIndex)))
     indexes
@@ -90,7 +90,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
     data = store
            |> getStoredValue(distinctValue)
            |> BitUtils.setBitAt(1, bitIndex)
-    Logger.debug fn -> "[finiteKeyProcessor] - generateAndStoreValue #{distinctValue}:\n#{BitUtils.dumpBitsStr(data)}" end
+    Logger.debug fn -> "[FiniteKeyProcessor] - generateAndStoreValue #{distinctValue}:\n#{BitUtils.dumpBitsStr(data)}" end
     ETS.insert(store, {distinctValue,  data})
   end
 

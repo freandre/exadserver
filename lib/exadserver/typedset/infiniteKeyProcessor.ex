@@ -24,7 +24,7 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
   end
 
   def findInIndex(adRequest, {indexName, _}, indexes, accumulator) do
-    {ads_store, _} = getBagStore("adsStore", indexes)
+    {ads_store, _} = getStore("adsStore", indexes)
 
     Enum.reduce(accumulator, accumulator,
                 fn(ad_id, acc) ->

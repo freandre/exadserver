@@ -25,7 +25,11 @@
         },
         "geo": {
             "data": [
-                "all"
+                {
+                  "latitude": 48.782400,
+                  "longitude": 2.314519,
+                  "radius": 2000
+                }
             ],
             "inclusive": true
         }
