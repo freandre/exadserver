@@ -40,10 +40,10 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
                     fn({indexName, _} = val, acc) ->
                       data = findInUniqueIndex(adRequest,
                                         val, indexes, acc)
-                      Logger.debug fn -> "#{indexName} => #{inspect(decodebitField(data, ix_ads_store, 0))}" end
+                      Logger.debug fn -> "#{indexName} => #{inspect(decodebitField(data, ix_ads_store))}" end
                       checkMainStopCondition(data)
                     end)
-    |> decodebitField(ix_ads_store, 1)
+          |> decodebitField(ix_ads_store)
 
     buildFindInIndex(acc, ret)
   end
@@ -129,22 +129,22 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   defp getValue(requestValue), do: requestValue
 
   ## Decode a bitfield to a list of ad id
-  defp decodebitField({_, size} = data, ixToAdIDStore, 1 ) do
-    BitUtils.splitBits(data, size)
-    |> Enum.map(fn({data, range}) ->
-                  Task.async(fn ->
-                               BitUtils.listOfIndexOfOne(data, range)
-                             end)
-                end)
-    |> Enum.map(&(Task.await(&1)))
-    |> Enum.reduce([], &(&1 ++ &2))
-    |> Enum.reduce(MapSet.new,
-             fn(index, acc) ->
-               [{^index, adId}] = ETS.lookup(ixToAdIDStore, index)
-               MapSet.put(acc, adId)
-             end)
-  end
-  defp decodebitField(data, ixToAdIDStore, 0) do
+  #defp decodebitFieldParallel({_, size} = data, ixToAdIDStore) do
+  #  BitUtils.splitBits(data, size) # for now do not split anything
+  #  |> Enum.map(fn({data, range}) ->
+  #                Task.async(fn ->
+  #                             BitUtils.listOfIndexOfOne(data, range)
+  #                           end)
+  #              end)
+  #  |> Enum.map(&(Task.await(&1)))
+  #  |> Enum.reduce([], &(&1 ++ &2))
+  #  |> Enum.reduce(MapSet.new,
+  #           fn(index, acc) ->
+  #             [{^index, adId}] = ETS.lookup(ixToAdIDStore, index)
+  #             MapSet.put(acc, adId)
+  #           end)
+  #end
+  defp decodebitField(data, ixToAdIDStore) do
     BitUtils.listOfIndexOfOne(data)
     |> Enum.reduce(MapSet.new,
              fn(index, acc) ->

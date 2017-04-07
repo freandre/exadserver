@@ -84,6 +84,7 @@ defmodule ExAdServer.Utils.BitUtils do
     Split a bits structure in several block of size blockSize bits
     Returns a list of {bitStruct, beginingIndex}
   """
+  def splitBits({_, size} = bits, blockSize) when size <= blockSize, do: [{bits, 0}]
   def splitBits(bits, blockSize), do: splitBits(bits, generateAllWithOne(blockSize), blockSize, 0, [])
 
   @doc """
@@ -117,12 +118,11 @@ defmodule ExAdServer.Utils.BitUtils do
   end
 
   ## Recursively split integer in chunks
-  defp splitBits({_, size}, _, _, _, acc) when size == 0, do: acc
-  defp splitBits({data, size} = bits, mask, blockSize, blockNumber, acc) when size >= blockSize do
+  defp splitBits({_, size} = bits, _, blockSize, blockNumber, acc) when size <= blockSize do
+    [{bits, blockSize * blockNumber} | acc]
+  end
+  defp splitBits({data, size} = bits, mask, blockSize, blockNumber, acc) when size > blockSize do
     splitBits({data >>> blockSize, size - blockSize}, mask, blockSize,
         blockNumber + 1, [{bitAnd(bits, mask), blockSize * blockNumber} | acc])
-  end
-  defp splitBits({_, size} = bits, mask, blockSize, blockNumber, acc) when size < blockSize do
-    splitBits(new(), mask, blockSize, blockNumber + 1, [{bitAnd(bits, mask), blockSize * blockNumber} | acc])
   end
 end
