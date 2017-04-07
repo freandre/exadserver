@@ -56,12 +56,13 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
     Logger.debug fn -> "inclusive: #{inspect(inclusive)}" end
     Logger.debug fn -> "#{inspect(geo_targets)}" end
 
-    ret =
-    Enum.map(geo_targets, fn(geo_target) ->
-                            Geohash.encode(geo_target["latitude"], geo_target["longitude"], geo_target["precision"])
-                          end)
+    ret = geo_targets
+    |> Enum.map(fn(geo_target) ->
+                  Geohash.encode(geo_target["latitude"], geo_target["longitude"], geo_target["precision"])
+                end)
     |> Enum.flat_map(fn(hash) ->
-                       [hash | Geohash.neighbors(hash)
+                       [hash | hash
+                               |> Geohash.neighbors
                                |> Enum.map(fn ({_, key}) -> key end)]
                      end)
     |> MapSet.new
@@ -76,7 +77,8 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
   def findInIndex(adRequest, {indexName, _}, indexes, accumulator) do
     {store, _} = getStore(indexName, indexes)
 
-    hashes = getGeoHashes(adRequest[indexName])
+    hashes = adRequest[indexName]
+             |> getGeoHashes
              |> MapSet.new
 
     Logger.debug fn -> "[GeoKeyProcessor] - findInIndex hash: #{inspect(hashes)}" end
