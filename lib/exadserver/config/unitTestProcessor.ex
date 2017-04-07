@@ -12,15 +12,17 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
     targeting_data = path
                      |> File.read!()
                      |> Poison.decode!
+
+    targets_metadata = Enum.reduce(targeting_data, %{},
+                                  fn({targetName, values}, acc) ->
+                                    Map.put(acc, targetName, prepareMetadata(values))
+                                  end)
+
     # generate ads
-    ads_map = generateAdsConf(numberOfAds, targeting_data)
+    ads_map = generateAdsConf(numberOfAds, targeting_data, targets_metadata)
 
-    target_metadata = Enum.reduce(targeting_data, %{},
-                                 fn({targetName, values}, acc) ->
-                                   Map.put(acc, targetName, prepareMetadata(values))
-                                 end)
 
-    [adsMap: ads_map, targetMetadata: target_metadata]
+    [adsMap: ads_map, targetsMetadata: targets_metadata]
   end
 
   def getAd(keywordArgs, adId) do
@@ -32,7 +34,7 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
   end
 
   def getMetadata(keywordArgs, targetName) do
-    target_metadata = keywordArgs[:targetMetadata]
+    target_metadata = keywordArgs[:targetsMetadata]
     case targetName do
       :all -> Map.to_list(target_metadata)
       _ -> target_metadata[targetName]
@@ -42,13 +44,13 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
   ## Private functions
 
   ## Generate random ad configuration
-  defp generateAdsConf(nb, targetingData) do
+  defp generateAdsConf(nb, targetingData, targetsMetadata) do
     if nb > 0 do
       1..nb
       |> Enum.to_list
       |> Enum.reduce(%{},
                      fn(_, acc) ->
-                       targeting_obj = generateTargeting(targetingData)
+                       targeting_obj = generateTargeting(targetingData, targetsMetadata)
                        Map.put(acc, targeting_obj["adid"], targeting_obj)
                      end)
     else
@@ -57,29 +59,30 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
   end
 
   ## Generate a targeting object for testing purpose
-  defp generateTargeting(targetsData) do
+  defp generateTargeting(targetsData, targetsMetadata) do
     #generate a liste of target
     targeting = Enum.reduce(targetsData, %{},
-                fn(targetData, acc) ->
-                  {target_name, target_value} = generateTarget(targetData)
+                fn({targetName, _} = targetData, acc) ->
+                  {target_name, target_value} = generateTarget(targetData, targetsMetadata[targetName])
                   Map.put(acc, target_name, target_value)
                 end)
     %{"adid" => UUID.uuid1(), "targeting" => targeting}
   end
 
   ## Generate a target object for testing purpose
-  defp generateTarget({targetName, targetValues}) do
+  defp generateTarget({targetName, targetValues}, targetMetadata) do
     data_list = targetValues["data"]
-    {targetName, %{"inclusive" => :rand.uniform(2) > 1, "data" => generateValueList(data_list)}}
+    {targetName, %{"inclusive" => :rand.uniform(2) > 1, "data" => generateValueList(data_list, targetMetadata)}}
   end
 
   # Generate a list of filtering values
-  defp generateValueList(dataList) do
-    number_of_values = :rand.uniform(length(dataList))
+  defp generateValueList(dataList, %{"type" => "geo"}), do: generateValueListNb(dataList, 1)
+  defp generateValueList(dataList, _), do: generateValueListNb(dataList, :rand.uniform(length(dataList)))
+  defp generateValueListNb(dataList, numberOfValues) do
     if :rand.uniform(100) > 75 do
       ["all"]
     else
-      recGenerateValueList(dataList, number_of_values, [])
+      recGenerateValueList(dataList, numberOfValues, [])
     end
   end
 
