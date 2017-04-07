@@ -1,153 +1,159 @@
-[{
-    "adid": 564334,
-    "targeting": {
-        "language": {
-            "data": [
-                "fr"
+[
+   {
+      "adid":564334,
+      "targeting":{
+         "language":{
+            "data":[
+               "fr"
             ],
-            "inclusive": true
-        },
-        "country": {
-            "data": [
-                "FR"
+            "inclusive":true
+         },
+         "country":{
+            "data":[
+               "FR"
             ],
-            "inclusive": true
-        },
-        "support": {
-            "data": [
-                "fr.two4tea.fightlist",
-                "fr.r0ro.android.FreeTelec",
-                "com.ea.game.scrabblemattel_bv",
-                "com.kathleenOswald.solitaireGooglePlay",
-                "com.Photo.Emoji.Photo.Sticker.Maker.pro"
+            "inclusive":true
+         },
+         "support":{
+            "data":[
+               "fr.two4tea.fightlist",
+               "fr.r0ro.android.FreeTelec",
+               "com.ea.game.scrabblemattel_bv",
+               "com.kathleenOswald.solitaireGooglePlay",
+               "com.Photo.Emoji.Photo.Sticker.Maker.pro"
             ],
-            "inclusive": false
-        },
-        "geo": {
-            "data": [
-                {
-                  "latitude": 48.782400,
-                  "longitude": 2.314519,
-                  "radius": 2000
-                }
+            "inclusive":false
+         },
+         "geo":{
+            "data":[
+               "all"
             ],
-            "inclusive": true
-        }
-    }
-}, {
-    "adid": 564335,
-    "targeting": {
-        "language": {
-            "data": [
-                "all"
+            "inclusive":true
+         }
+      }
+   },
+   {
+      "adid":564335,
+      "targeting":{
+         "language":{
+            "data":[
+               "all"
             ],
-            "inclusive": true
-        },
-        "country": {
-            "data": [
-                "FR"
+            "inclusive":true
+         },
+         "country":{
+            "data":[
+               "FR"
             ],
-            "inclusive": true
-        },
-        "support": {
-            "data": [
-                "fr.two4tea.fightlist",
-                "fr.r0ro.android.FreeTelec",
-                "leroy.merlin",
-                "barbie",
-                "king.jouet"
+            "inclusive":true
+         },
+         "support":{
+            "data":[
+               "fr.two4tea.fightlist",
+               "fr.r0ro.android.FreeTelec",
+               "leroy.merlin",
+               "barbie",
+               "king.jouet"
             ],
-            "inclusive": false
-        },
-        "geo": {
-            "data": [
-                "all"
+            "inclusive":false
+         },
+         "geo":{
+            "data":[
+               "all"
             ],
-            "inclusive": true
-        }
-    }
-}, {
-    "adid": 564336,
-    "targeting": {
-        "language": {
-            "data": [
-                "all"
+            "inclusive":true
+         }
+      }
+   },
+   {
+      "adid":564336,
+      "targeting":{
+         "language":{
+            "data":[
+               "all"
             ],
-            "inclusive": true
-        },
-        "country": {
-            "data": [
-                "RU"
+            "inclusive":true
+         },
+         "country":{
+            "data":[
+               "RU"
             ],
-            "inclusive": true
-        },
-        "support": {
-            "data": [
-                "leroy.merlin"
+            "inclusive":true
+         },
+         "support":{
+            "data":[
+               "leroy.merlin"
             ],
-            "inclusive": true
-        },
-        "geo": {
-            "data": [
-                "all"
+            "inclusive":true
+         },
+         "geo":{
+            "data":[
+               {
+                  "latitude":48.782400,
+                  "longitude":2.314519,
+                  "radius":2000
+               }
             ],
-            "inclusive": true
-        }
-    }
-}, {
-    "adid": 564337,
-    "targeting": {
-        "language": {
-            "data": [
-                "all"
+            "inclusive":true
+         }
+      }
+   },
+   {
+      "adid":564337,
+      "targeting":{
+         "language":{
+            "data":[
+               "all"
             ],
-            "inclusive": true
-        },
-        "country": {
-            "data": [
-                "RU"
+            "inclusive":true
+         },
+         "country":{
+            "data":[
+               "RU"
             ],
-            "inclusive": false
-        },
-        "support": {
-            "data": [
-                "leroy.merlin"
+            "inclusive":false
+         },
+         "support":{
+            "data":[
+               "leroy.merlin"
             ],
-            "inclusive": true
-        },
-        "geo": {
-            "data": [
-                "all"
+            "inclusive":true
+         },
+         "geo":{
+            "data":[
+               "all"
             ],
-            "inclusive": true
-        }
-    }
-}, {
-    "adid": 564338,
-    "targeting": {
-        "language": {
-            "data": [
-                "all"
+            "inclusive":true
+         }
+      }
+   },
+   {
+      "adid":564338,
+      "targeting":{
+         "language":{
+            "data":[
+               "all"
             ],
-            "inclusive": false
-        },
-        "country": {
-            "data": [
-                "RU"
+            "inclusive":false
+         },
+         "country":{
+            "data":[
+               "RU"
             ],
-            "inclusive": false
-        },
-        "support": {
-            "data": [
-                "all"
+            "inclusive":false
+         },
+         "support":{
+            "data":[
+               "all"
             ],
-            "inclusive": true
-        },
-        "geo": {
-            "data": [
-                "all"
+            "inclusive":true
+         },
+         "geo":{
+            "data":[
+               "all"
             ],
-            "inclusive": true
-        }
-    }
-}]
+            "inclusive":true
+         }
+      }
+   }
+]

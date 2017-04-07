@@ -1,52 +1,86 @@
-[{
-        "request": {
-            "language": "pl",
-            "country": "PL",
-            "support": "leroy.merlin",
-            "geo": {
-              "latitude": 48.782400,
-              "longitude": 2.314519
-            }
-        },
-        "expected": [564337]
-    },
-    {
-            "request": {
-                "country": "PL",
-                "support": "leroy.merlin"
-            },
-            "expected": [564337, 564338]
-        },
-    {
-        "request": {
-            "language": "pl",
-            "country": "RU",
-            "support": "leroy.merlin"
-        },
-        "expected": [564336]
-    },
-    {
-        "request": {
-            "language": "fr",
-            "country": "FR",
-            "support": "fr.two4tea.fightlist"
-        },
-        "expected": []
-    },
-    {
-        "request": {
-            "language": "fr",
-            "country": "FR",
-            "support": "fr.two4tea"
-        },
-        "expected": [564334, 564335]
-    },
-    {
-        "request": {
-            "language": "fr",
-            "country": "FR",
-            "support": "fr.two4tea"
-        },
-        "expected": [564334, 564335]
-    }
+[
+   {
+      "request":{
+         "language":"pl",
+         "country":"PL",
+         "support":"leroy.merlin",
+         "geo":{
+            "latitude":48.782400,
+            "longitude":2.314519
+         }
+      },
+      "expected":[
+         564337
+      ]
+   },
+   {
+      "request":{
+         "country":"PL",
+         "support":"leroy.merlin"
+      },
+      "expected":[
+         564337,
+         564338
+      ]
+   },
+   {
+      "request":{
+         "language":"pl",
+         "country":"RU",
+         "support":"leroy.merlin",
+         "geo":{
+            "latitude":48.782400,
+            "longitude":2.314519
+         }
+      },
+      "expected":[
+         564336
+      ]
+   },
+   {
+      "request":{
+         "language":"pl",
+         "country":"RU",
+         "support":"leroy.merlin",
+         "geo":{
+            "latitude":48.792752,
+            "longitude":2.401272
+         }
+      },
+      "expected":[
+
+      ]
+   },
+   {
+      "request":{
+         "language":"fr",
+         "country":"FR",
+         "support":"fr.two4tea.fightlist"
+      },
+      "expected":[
+
+      ]
+   },
+   {
+      "request":{
+         "language":"fr",
+         "country":"FR",
+         "support":"fr.two4tea"
+      },
+      "expected":[
+         564334,
+         564335
+      ]
+   },
+   {
+      "request":{
+         "language":"fr",
+         "country":"FR",
+         "support":"fr.two4tea"
+      },
+      "expected":[
+         564334,
+         564335
+      ]
+   }
 ]
