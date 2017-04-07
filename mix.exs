@@ -38,6 +38,7 @@ defmodule ExAdServer.Mixfile do
       {:geohash, "~> 1.0"},
       {:uuid, "~> 1.1" },
       {:benchfella, "~> 0.3.0"},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:credo, "~> 0.7", only: [:dev, :test]}
     ]
   end

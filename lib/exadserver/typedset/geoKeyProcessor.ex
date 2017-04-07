@@ -52,7 +52,8 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
     # Assume that geotargeting is only inclusive
     geo_target = getGeoTarget(adConf["targeting"][indexName]["geo"])
 
-    Geohash.encode(geo_target["latitude"], geo_target["longitude"], geo_target["precision"])
+    hash = Geohash.encode(geo_target["latitude"], geo_target["longitude"], geo_target["precision"])
+    hash
     |> Geohash.neighbors
     |> Enum.map(fn ({_, key}) -> key end)
     |> Enum.each(&(ETS.insert(store, {&1, adConf["adid"]})))
