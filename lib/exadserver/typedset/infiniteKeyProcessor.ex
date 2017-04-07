@@ -24,11 +24,11 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
   end
 
   def findInIndex(adRequest, {indexName, _}, indexes, accumulator) do
-    {adsStore, _} = getBagStore("adsStore", indexes)
+    {ads_store, _} = getBagStore("adsStore", indexes)
 
     Enum.reduce(accumulator, accumulator,
                 fn(ad_id, acc) ->
-                  [{^ad_id, ad_conf}] = ETS.lookup(adsStore, ad_id)
+                  [{^ad_id, ad_conf}] = ETS.lookup(ads_store, ad_id)
                     conf_values = ad_conf["targeting"][indexName]
                     conf_inclusive = conf_values["inclusive"]
                     conf_data = conf_values["data"]

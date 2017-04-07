@@ -36,11 +36,12 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
 
     Logger.debug fn -> "[finiteKeyProcessor] - findInIndex request:\n#{inspect(adRequest)}" end
 
-    ret = Enum.reduce_while(indexMetadata, :first,
-                    fn({indexName, _} = val, acc) ->
+    ret = indexMetadata
+          |> Enum.reduce_while(:first,
+                    fn({index_name, _} = val, acc) ->
                       data = findInUniqueIndex(adRequest,
                                         val, indexes, acc)
-                      Logger.debug fn -> "#{indexName} => #{inspect(decodebitField(data, ix_ads_store))}" end
+                      Logger.debug fn -> "#{index_name} => #{inspect(decodebitField(data, ix_ads_store))}" end
                       checkMainStopCondition(data)
                     end)
           |> decodebitField(ix_ads_store)
@@ -86,7 +87,8 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   ## Given a key of distinct values, check if it's part of values to store
   ## set the bit of retrived bitmap at index
   defp generateAndStoreValue(store, distinctValue, bitIndex) do
-    data = getStoredValue(store, distinctValue)
+    data = store
+           |> getStoredValue(distinctValue)
            |> BitUtils.setBitAt(1, bitIndex)
     Logger.debug fn -> "[finiteKeyProcessor] - generateAndStoreValue #{distinctValue}:\n#{BitUtils.dumpBitsStr(data)}" end
     ETS.insert(store, {distinctValue,  data})
@@ -140,16 +142,17 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
   #  |> Enum.reduce([], &(&1 ++ &2))
   #  |> Enum.reduce(MapSet.new,
   #           fn(index, acc) ->
-  #             [{^index, adId}] = ETS.lookup(ixToAdIDStore, index)
-  #             MapSet.put(acc, adId)
+  #             [{^index, ad_id}] = ETS.lookup(ixToAdIDStore, index)
+  #             MapSet.put(acc, ad_id)
   #           end)
   #end
   defp decodebitField(data, ixToAdIDStore) do
-    BitUtils.listOfIndexOfOne(data)
+    data
+    |> BitUtils.listOfIndexOfOne
     |> Enum.reduce(MapSet.new,
              fn(index, acc) ->
-               [{^index, adId}] = ETS.lookup(ixToAdIDStore, index)
-               MapSet.put(acc, adId)
+               [{^index, ad_id}] = ETS.lookup(ixToAdIDStore, index)
+               MapSet.put(acc, ad_id)
              end)
   end
 end

@@ -21,20 +21,20 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
                   {36, 152.8757},
                   {34, 305.751},
                   {32, 611.5028},
-                  {30, 1223.0056},
-                  {28, 2446.0112},
-                  {26, 4892.0224 },
-                  {24, 9784.0449},
-                  {22, 19568.0898},
-                  {20, 39136.1797},
-                  {18, 78272.35938},
-                  {16, 156544.7188},
-                  {14, 313089.4375},
-                  {12, 626178.875},
-                  {10, 1252357.75},
-                  {8, 2504715.5},
-                  {6, 5009431},
-                  {4, 10018863}]
+                  {30, 1_223.0056},
+                  {28, 2_446.0112},
+                  {26, 4_892.0224},
+                  {24, 9_784.0449},
+                  {22, 19_568.0898},
+                  {20, 39_136.1797},
+                  {18, 78_272.35938},
+                  {16, 156_544.7188},
+                  {14, 313_089.4375},
+                  {12, 626_178.875},
+                  {10, 1_252_357.75},
+                  {8, 2_504_715.5},
+                  {6, 5_009_431},
+                  {4, 10_018_863}]
 
   ## Behaviour Callbacks
 
@@ -63,7 +63,8 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
   def findInIndex(adRequest, {indexName, _}, indexes, accumulator) do
     {store, _} = getBagStore(indexName, indexes)
 
-    getGeoHash(adRequest[indexName])
+    adRequest[indexName]
+    |> getGeoHash()
     |> Enum.reduce(MapSet.new,
                    fn(key, acc) ->
                      Enum.reduce(ETS.lookup(store, key), acc,
