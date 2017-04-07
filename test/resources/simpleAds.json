@@ -155,5 +155,38 @@
             "inclusive":true
          }
       }
+   },
+   {
+      "adid":564339,
+      "targeting":{
+         "language":{
+            "data":[
+               "all"
+            ],
+            "inclusive":true
+         },
+         "country":{
+            "data":[
+               "RU"
+            ],
+            "inclusive":true
+         },
+         "support":{
+            "data":[
+               "leroy.merlin"
+            ],
+            "inclusive":true
+         },
+         "geo":{
+            "data":[
+               {
+                  "latitude":48.782400,
+                  "longitude":2.314519,
+                  "radius":2000
+               }
+            ],
+            "inclusive":false
+         }
+      }
    }
 ]
