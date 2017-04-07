@@ -62,8 +62,8 @@ defmodule  ExAdServer.Config.UnitTestProcessor do
   defp generateTargeting(targetsData, targetsMetadata) do
     #generate a liste of target
     targeting = Enum.reduce(targetsData, %{},
-                fn({targetName, _} = targetData, acc) ->
-                  {target_name, target_value} = generateTarget(targetData, targetsMetadata[targetName])
+                fn({target_name, _} = targetData, acc) ->
+                  {target_name, target_value} = generateTarget(targetData, targetsMetadata[target_name])
                   Map.put(acc, target_name, target_value)
                 end)
     %{"adid" => UUID.uuid1(), "targeting" => targeting}
