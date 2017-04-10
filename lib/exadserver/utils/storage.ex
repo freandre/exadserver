@@ -8,38 +8,26 @@ defmodule ExAdServer.Utils.Storage do
   @doc """
   Helper function to print the content of an ets store
   """
-  def dumpETS(etsStore) do
-    IO.puts("Store: " <> Atom.to_string(ETS.info(etsStore)[:name]))
-    etsStore
+  def dumpETS(ets_store) do
+    IO.puts("Store: " <> Atom.to_string(ETS.info(ets_store)[:name]))
+    ets_store
     |> ETS.match(:"$1")
     |> Enum.each(&IO.puts(inspect(&1)))
   end
 
   @doc """
-  Get a bag store from a registry and its name. If not available it is created
-  and the registry updated
+  Helper function to retrieve a normalized index store
   """
-  def getBagStore(name, indexes \\ %{}) do
-    if Map.has_key?(indexes, name) == false do
-      store = ETS.new(String.to_atom(name), [:bag])
-      new_indexes = Map.put(indexes, name, store)
-      {store, new_indexes}
-    else
-      {indexes[name], indexes}
-    end
-  end
+  def getIxAtom(ix_name), do: String.to_atom(ix_name <> "_store")
 
   @doc """
-  Get a set store from a registry and its name. If not available it is created
-  and the registry updated
+  Helper function to create a named data store
   """
-  def getStore(name, indexes \\ %{}) do
-    if Map.has_key?(indexes, name) == false do
-      store = ETS.new(String.to_atom(name), [])
-      new_indexes = Map.put(indexes, name, store)
-      {store, new_indexes}
+  def createStore(store_name) do
+    if ETS.info(store_name) != :undefined do
+      IO.puts("FUUUUUUUUUUUUUUUUUUUUUCKKKK")
     else
-      {indexes[name], indexes}
+      ETS.new(store_name, [:named_table])
     end
   end
 end

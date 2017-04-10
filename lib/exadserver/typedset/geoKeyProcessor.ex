@@ -41,14 +41,16 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
   def generateMetadata(targeterMetada) do
     ret = targeterMetada
     |> Enum.filter_map(fn ({_, v}) -> v["type"] == "geo" end,
-                       fn ({k, v}) -> {k, ExAdServer.TypedSet.GeoKeyProcessor, v} end)
+                       fn ({k, v}) ->
+                         createStore(getIxAtom(k))
+                         {k, ExAdServer.TypedSet.GeoKeyProcessor, v}
+                       end)
     Logger.debug fn -> "[GeoKeyProcessor] - Exiting generateMetadata returning:\n
                         #{inspect(ret)}" end
     ret
   end
 
-  def generateAndStoreIndex({adConf, _}, {indexName, _}, indexes) do
-    {store, indexes} = getStore(indexName, indexes)
+  def generateAndStoreIndex({adConf, _}, {indexName, _}) do
 
     geo_targets = getGeoTargets(adConf["targeting"][indexName]["data"])
     inclusive = adConf["targeting"][indexName]["inclusive"]
@@ -69,14 +71,10 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
 
     Logger.debug fn -> "> :#{inspect(ret)}" end
 
-    ETS.insert(store, {adConf["adid"], {inclusive, ret}})
-
-    indexes
+    ETS.insert(getIxAtom(indexName), {adConf["adid"], {inclusive, ret}})
   end
 
-  def findInIndex(adRequest, {indexName, _}, indexes, accumulator) do
-    {store, _} = getStore(indexName, indexes)
-
+  def findInIndex(adRequest, {indexName, _}, accumulator) do
     hashes = adRequest[indexName]
              |> getGeoHashes
              |> MapSet.new
@@ -85,7 +83,8 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
 
     Enum.reduce(accumulator, accumulator,
                 fn(ad_id, acc) ->
-                  [{^ad_id, {inclusive, conf_hashes}}] = ETS.lookup(store, ad_id)
+                  [{^ad_id, {inclusive, conf_hashes}}] =
+                              ETS.lookup(getIxAtom(indexName), ad_id)
 
                     cond do
                       inclusive == false and

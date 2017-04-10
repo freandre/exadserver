@@ -6,7 +6,6 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
   @behaviour ExAdServer.TypedSet.BehaviorKeysProcessor
 
   require Logger
-  import ExAdServer.Utils.Storage
   alias :ets, as: ETS
 
   ## Behaviour Callbacks
@@ -19,16 +18,14 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
     ret
   end
 
-  def generateAndStoreIndex(_, {indexName, _}, indexes) do
-    Map.put(indexes, indexName, nil)
+  def generateAndStoreIndex(_, _) do
+    # Nothing to do we use the main ads store for filtering
   end
 
-  def findInIndex(adRequest, {indexName, _}, indexes, accumulator) do
-    {ads_store, _} = getStore("adsStore", indexes)
-
+  def findInIndex(adRequest, {indexName, _}, accumulator) do
     Enum.reduce(accumulator, accumulator,
                 fn(ad_id, acc) ->
-                  [{^ad_id, ad_conf}] = ETS.lookup(ads_store, ad_id)
+                  [{^ad_id, ad_conf}] = ETS.lookup(:ads_store, ad_id)
                     conf_values = ad_conf["targeting"][indexName]
                     conf_inclusive = conf_values["inclusive"]
                     conf_data = conf_values["data"]
