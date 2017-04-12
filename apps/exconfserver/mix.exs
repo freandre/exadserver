@@ -38,8 +38,8 @@ defmodule Exconfserver.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [{:poison, "~> 3.0"},
-     {:uuid, "~> 1.1" }
+     {:uuid, "~> 1.1" },
      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-     {:credo, "~> 0.7", only: [:dev, :test]]
+     {:credo, "~> 0.7", only: [:dev, :test]}]
   end
 end
