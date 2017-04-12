@@ -1,9 +1,9 @@
-defmodule ExAdServer.TypedSet.GeoKeyProcessor do
+defmodule ExAdServer.Indexes.GeoKeyProcessor do
   @moduledoc """
   Geo key processor implementation.
   """
 
-  @behaviour ExAdServer.TypedSet.BehaviorKeysProcessor
+  @behaviour ExAdServer.Indexes.BehaviorKeysProcessor
 
   require Logger
   import ExAdServer.Utils.Storage
@@ -43,7 +43,7 @@ defmodule ExAdServer.TypedSet.GeoKeyProcessor do
     |> Enum.filter_map(fn ({_, v}) -> v["type"] == "geo" end,
                        fn ({k, v}) ->
                          createStore(getIxAtom(k))
-                         {k, ExAdServer.TypedSet.GeoKeyProcessor, v}
+                         {k, ExAdServer.Indexes.GeoKeyProcessor, v}
                        end)
     Logger.debug fn -> "[GeoKeyProcessor] - Exiting generateMetadata returning:\n
                         #{inspect(ret)}" end

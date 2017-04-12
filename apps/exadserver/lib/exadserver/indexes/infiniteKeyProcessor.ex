@@ -1,9 +1,9 @@
-defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
+defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
   @moduledoc """
   Infinite key processor implementation.
   """
 
-  @behaviour ExAdServer.TypedSet.BehaviorKeysProcessor
+  @behaviour ExAdServer.Indexes.BehaviorKeysProcessor
 
   require Logger
   alias :ets, as: ETS
@@ -13,7 +13,7 @@ defmodule ExAdServer.TypedSet.InfiniteKeyProcessor do
   def generateMetadata(targeterMetada) do
     ret = targeterMetada
     |> Enum.filter_map(fn ({_, v}) -> v["type"] == "infinite" end,
-                       fn ({k, v}) -> {k, ExAdServer.TypedSet.InfiniteKeyProcessor, v} end)
+                       fn ({k, v}) -> {k, ExAdServer.Indexes.InfiniteKeyProcessor, v} end)
     Logger.debug fn -> "[InfiniteKeyProcessor] - Exiting generateMetadata returning:\n#{inspect(ret)}" end
     ret
   end

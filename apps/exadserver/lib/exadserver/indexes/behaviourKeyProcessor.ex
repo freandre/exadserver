@@ -1,4 +1,4 @@
-defmodule  ExAdServer.TypedSet.BehaviorKeysProcessor do
+defmodule  ExAdServer.Indexes.BehaviorKeysProcessor do
   @moduledoc """
   Behaviour definition to fix common action for storing and retrieving
   data in indexes.

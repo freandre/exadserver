@@ -1,9 +1,9 @@
-defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
+defmodule ExAdServer.Indexes.FiniteKeyProcessor do
   @moduledoc """
   Finite key processor implementation.
   """
 
-  @behaviour ExAdServer.TypedSet.BehaviorKeysProcessor
+  @behaviour ExAdServer.Indexes.BehaviorKeysProcessor
 
   require Logger
   import ExAdServer.Utils.Storage
@@ -21,7 +21,7 @@ defmodule ExAdServer.TypedSet.FiniteKeyProcessor do
                           Map.put(acc, k, v)
                         end)
 
-    ret = [{"finite", ExAdServer.TypedSet.FiniteKeyProcessor, val}]
+    ret = [{"finite", ExAdServer.Indexes.FiniteKeyProcessor, val}]
 
     Logger.debug fn -> "[FiniteKeyProcessor] - Exiting generateMetadata returning:\n#{inspect(ret)}" end
 
