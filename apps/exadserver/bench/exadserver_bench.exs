@@ -1,14 +1,14 @@
 # bench/basic_bench.exs
 defmodule ExAdServerBench do
-  use Benchfella  
+  use Benchfella
 
   @numberOfAds 20000
 
   setup_all do
-    {:ok, configserver} = ConfigServer.start_link({"./test/resources/targetingData.json", @numberOfAds})
-    {:ok, adserver} = ExAdServer.start_link(ConfigServer.getMetadata(configserver))
+    {:ok, configserver} = ExConfServer.start_link({"./test/resources/targetingData.json", @numberOfAds})
+    {:ok, adserver} = ExAdServer.start_link(ExConfServer.getMetadata(configserver))
 
-    ConfigServer.getAd(configserver)
+    ExConfServer.getAd(configserver)
     |> Enum.each(&ExAdServer.loadAd(adserver, &1))
 
     {:ok, [configServer: configserver, adServer: adserver]}
@@ -18,7 +18,7 @@ defmodule ExAdServerBench do
     config = bench_context[:configServer]
 
     val = ["country", "language", "iab", "hour", "minute"]
-    |> Enum.reduce(%{}, &(Map.put(&2, &1, pickValue(ConfigServer.getMetadata(config, &1)["distinctvalues"]))))
+    |> Enum.reduce(%{}, &(Map.put(&2, &1, pickValue(ExConfServer.getMetadata(config, &1)["distinctvalues"]))))
 
     {:ok, [config: val, adServer: bench_context[:adServer]]}
   end
