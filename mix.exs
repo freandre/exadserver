@@ -1,4 +1,4 @@
-defmodule Toto.Mixfile do
+defmodule ExAdServer.Mixfile do
   use Mix.Project
 
   def project do
