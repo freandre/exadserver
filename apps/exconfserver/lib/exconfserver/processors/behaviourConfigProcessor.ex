@@ -1,4 +1,4 @@
-defmodule  ExAdServer.Config.BehaviorConfigProcessor do
+defmodule  ExConfServer.Processors.BehaviorConfigProcessor do
   @moduledoc """
   Behaviour declaration to fix common action for configuration micro service.
   """

@@ -1,10 +1,10 @@
-defmodule  ExAdServer.Config.UnitTestProcessor do
+defmodule  ExConfServer.Processors.UnitTestProcessor do
   @moduledoc """
   Mock configuration implementation. It generates a number of config based on
   metadata.
   """
 
-  @behaviour ExAdServer.Config.BehaviorConfigProcessor
+  @behaviour ExConfServer.Processors.BehaviorConfigProcessor
 
   ## Behaviour Callbacks
 

@@ -1,4 +1,4 @@
-defmodule ExAdServer.Config.ConfigServer do
+defmodule ExConfServer do
   @moduledoc """
   Configuration micro service hiding the real configuration datasource.
   """
@@ -38,7 +38,7 @@ defmodule ExAdServer.Config.ConfigServer do
   init based on path, this is mainly used for unit testing
   """
   def init({_path, number_of_ads} = params) when number_of_ads >= 0 do
-    processor = ExAdServer.Config.UnitTestProcessor
+    processor = ExConfServer.Processors.UnitTestProcessor
     {:ok, [processor: processor, data: processor.init(params)]}
   end
 
