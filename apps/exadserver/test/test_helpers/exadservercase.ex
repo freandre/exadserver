@@ -1,4 +1,4 @@
-defmodule AdServerCase do
+defmodule ExAdServerCase do
   use ExUnit.CaseTemplate
 
   setup_all do

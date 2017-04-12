@@ -1,5 +1,5 @@
 defmodule ExAdServerTest do
-  use AdServerCase, async: true  
+  use ExAdServerCase, async: true  
 
   test "That our adServer can load some basic data", context do
     {:ok, configserver} = ExConfServer.start_link({"./test/resources/simpleTargetingData.json", 0})
