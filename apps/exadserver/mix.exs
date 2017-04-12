@@ -2,7 +2,7 @@ defmodule ExAdServer.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :toto,
+    [app: :exadserver,
      version: "0.1.0",
      build_path: "../../_build",
      config_path: "../../config/config.exs",
@@ -42,6 +42,7 @@ defmodule ExAdServer.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
+      {:exconfserver, in_umbrella: true},
       {:geohash, "~> 1.0"},
       {:benchfella, "~> 0.3.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},

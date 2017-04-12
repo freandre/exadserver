@@ -4,7 +4,7 @@ defmodule ExAdServer do
   Finite values are dernormalized to find adid
   """
   require Logger
-  import ExAdServer.Indexes
+  alias ExAdServer.Indexes
   import ExAdServer.Utils.Storage
   alias :ets, as: ETS
 
@@ -104,9 +104,9 @@ defmodule ExAdServer do
   defp getMetadata(targetMetadata) do
     Logger.debug fn -> "[adserver] - Entering getMetadata:\n #{inspect(targetMetadata)}" end
 
-    ret = FiniteKeyProcessor.generateMetadata(targetMetadata) ++
-    InfiniteKeyProcessor.generateMetadata(targetMetadata) ++
-    GeoKeyProcessor.generateMetadata(targetMetadata)
+    ret = Indexes.FiniteKeyProcessor.generateMetadata(targetMetadata) ++
+    Indexes.InfiniteKeyProcessor.generateMetadata(targetMetadata) ++
+    Indexes.GeoKeyProcessor.generateMetadata(targetMetadata)
 
     Logger.debug fn -> "[adserver] - Exiting getMetadata:\n#{inspect(ret)}" end
 

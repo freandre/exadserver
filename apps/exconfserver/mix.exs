@@ -1,4 +1,4 @@
-defmodule Exconfserver.Mixfile do
+defmodule ExConfServer.Mixfile do
   use Mix.Project
 
   def project do
@@ -20,7 +20,7 @@ defmodule Exconfserver.Mixfile do
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
     [extra_applications: [:logger],
-     mod: {Exconfserver.Application, []}]
+     mod: {ExConfServer.Application, []}]
   end
 
   # Dependencies can be Hex packages:
