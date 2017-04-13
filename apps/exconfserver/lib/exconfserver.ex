@@ -28,6 +28,13 @@ defmodule ExConfServer do
     GenServer.call(server, {:getMetadata, targetName})
   end
 
+  @doc """
+  Stop the server
+  """
+  def stop(server) do
+    GenServer.stop(server)
+  end
+
   ## Server Callbacks
 
   def init(:ok) do

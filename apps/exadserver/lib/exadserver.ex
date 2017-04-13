@@ -45,6 +45,13 @@ defmodule ExAdServer do
     GenServer.call(server, {:filter, adRequest})
   end
 
+  @doc """
+  Stop the server
+  """
+  def stop(server) do
+    GenServer.stop(server)
+  end
+
   ## Server Callbacks
 
   ## init callback, we initialize the main store as well as the finite index store,

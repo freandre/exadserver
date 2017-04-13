@@ -84,4 +84,14 @@ defmodule ExAdServerTest do
                         """)
               end)
   end
+
+  test "Stop adServer properly", context do
+    {:ok, configserver} = ExConfServer.start_link(genCS(context.test), {"./test/resources/simpleTargetingData.json", 0})
+    {:ok, adserver} = ExAdServer.start_link(genAS(context.test), ExConfServer.getMetadata(configserver))
+
+    assert(:ok == ExAdServer.stop(adserver),
+          """
+          Unable to stop properly the server
+          """)
+  end
 end

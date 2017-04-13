@@ -14,6 +14,11 @@ defmodule ExAdServerBench do
     {:ok, [configServer: configserver, adServer: adserver]}
   end
 
+  teardown_all keywords do
+    ExAdServer.stop(keywords[:adServer])
+    ExConfServer.stop(keywords[:configServer])
+  end
+
   before_each_bench bench_context do
     config = bench_context[:configServer]
 

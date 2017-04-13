@@ -26,4 +26,14 @@ defmodule ExconfserverTest do
           #{inspect(returned)}
           """)
   end
+
+  test "Stop adServer properly", context do
+    number = 1
+    {:ok, configserver} = ExConfServer.start_link(context.test, {"./test/resources/simpleTargetingData.json", number})
+
+    assert(:ok == ExConfServer.stop(configserver),
+          """
+          Unable to stop properly the server
+          """)
+  end
 end
