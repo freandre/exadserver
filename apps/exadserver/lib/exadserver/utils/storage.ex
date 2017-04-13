@@ -24,6 +24,6 @@ defmodule ExAdServer.Utils.Storage do
   Helper function to create a named data store
   """
   def createStore(store_name) do
-    Eternal.start_link(store_name, [:named_table])
+    Eternal.start(store_name, [:named_table, {:read_concurrency, true}])
   end
 end

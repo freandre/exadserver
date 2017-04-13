@@ -68,15 +68,20 @@ defmodule ExAdServer do
   ## an index for each
   def handle_call({:load, adConf}, _from, state) do
     num_ads = state[:maxIndex]
-
-    ETS.insert(:ads_store, {adConf["adid"],  adConf})
-    ETS.insert(:bit_ix_to_ads_store, {num_ads, adConf["adid"]})
-
     state = Keyword.put(state, :maxIndex, num_ads + 1)
-    Enum.each(state[:targetMetadata],
-              fn({indexName, indexProcessor, indexMetaData}) ->
-                indexProcessor.generateAndStoreIndex({adConf, num_ads}, {indexName, indexMetaData})
-              end)
+
+    Task.start(fn ->
+                ETS.insert(:ads_store, {adConf["adid"],  adConf})
+                ETS.insert(:bit_ix_to_ads_store, {num_ads, adConf["adid"]})
+
+                Enum.each(state[:targetMetadata],
+                          fn({indexName, indexProcessor, indexMetaData}) ->
+                            Task.start(fn ->
+                              indexProcessor.generateAndStoreIndex({adConf, num_ads}, {indexName, indexMetaData})
+                            end)
+                          end)
+               end)
+
     {:reply, :ok, state}
   end
 
