@@ -23,11 +23,11 @@ use Mix.Config
 
 config :logger, level: :info
 
-config ExConfServer, Testing,
+config :exconfserver, Testing,
   distinctPath: "./test/resources/targetingData.json",
   numberOfConf: 5000
 
-config ExConfServer, DBConnection,
+config :exconfserver, DBConnection,
   adapter: Ecto.Adapters.Postgres,
   database: "sn",
   username: "postgres",

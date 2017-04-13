@@ -15,3 +15,7 @@ import_config "../apps/*/config/config.exs"
 #       level: :info,
 #       format: "$date $time [$level] $metadata$message\n",
 #       metadata: [:user_id]
+
+config :exconfserver, Testing,
+  distinctPath: "./apps/exconfserver/test/resources/targetingData.json",
+  numberOfConf: 5000

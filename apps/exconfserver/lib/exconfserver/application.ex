@@ -28,11 +28,11 @@ defmodule ExConfServer.Application do
   ## Check in configuration if there is a testing value, if so use it in priority
   ## instead of DB connection
   defp getInitData do
-    data = Application.get_env(ExConfServer, Testing)
+    data = Application.get_env(:exconfserver, Testing)
     if data != nil do
       {data[:distinctPath], data[:numberOfConf]}
     else
-      Application.get_env(ExConfServer, DBConnection)
+      Application.get_env(:exconfserver, DBConnection)
     end
   end
 end
