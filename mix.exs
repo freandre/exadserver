@@ -1,4 +1,4 @@
-defmodule ExAdServer.Mixfile do
+defmodule ExAdServerUmbrella.Mixfile do
   use Mix.Project
 
   def project do
