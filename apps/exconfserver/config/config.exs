@@ -24,7 +24,7 @@ use Mix.Config
 config :logger, level: :info
 
 config :exconfserver, Testing,
-  distinctPath: "./test/resources/targetingData.json",
+  distinctPath: List.first(Path.wildcard("**/test/resources/targetingData.json")),
   numberOfConf: 5000
 
 config :exconfserver, DBConnection,
