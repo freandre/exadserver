@@ -21,6 +21,19 @@ use Mix.Config
 #     config :logger, level: :info
 #
 
+config :logger, level: :debug
+
+config ExConfServer, Testing,
+  distinctPath: "./test/resources/targetingData.json",
+  numberOfConf: 5000
+
+config ExConfServer, DBConnection,
+  adapter: Ecto.Adapters.Postgres,
+  database: "sn",
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost"
+
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
 # by uncommenting the line below and defining dev.exs, test.exs and such.

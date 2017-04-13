@@ -1,9 +1,9 @@
 defmodule ExconfserverTest do
   use ExUnit.Case, async: true
 
-  test "UnitTestConfig init" do
+  test "UnitTestConfig init", context do
     number = 10
-    {:ok, configserver} = ExConfServer.start_link({"./test/resources/simpleTargetingData.json", number})
+    {:ok, configserver} = ExConfServer.start_link(context.test, {"./test/resources/simpleTargetingData.json", number})
     returned = length(ExConfServer.getAd(configserver))
     assert(returned == number,
           """
@@ -15,9 +15,9 @@ defmodule ExconfserverTest do
           """)
   end
 
-  test "UnitTestConfig MetaData" do
+  test "UnitTestConfig MetaData", context do
     number = 1
-    {:ok, configserver} = ExConfServer.start_link({"./test/resources/simpleTargetingData.json", number})
+    {:ok, configserver} = ExConfServer.start_link(context.test, {"./test/resources/simpleTargetingData.json", number})
     returned = ExConfServer.getMetadata(configserver, "support")
     assert(returned["distinctvalues"] == nil,
           """

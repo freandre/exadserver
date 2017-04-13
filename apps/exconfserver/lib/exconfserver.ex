@@ -10,8 +10,8 @@ defmodule ExConfServer do
   @doc """
   Starts the server.
   """
-  def start_link(initData) do
-    GenServer.start_link(__MODULE__, initData, [])
+  def start_link(name, initData) do
+    GenServer.start_link(__MODULE__, initData, [name: name])
   end
 
   @doc """
