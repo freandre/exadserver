@@ -21,7 +21,6 @@ defmodule  ExConfServer.Processors.UnitTestProcessor do
     # generate ads
     ads_map = generateAdsConf(numberOfAds, targeting_data, targets_metadata)
 
-
     [adsMap: ads_map, targetsMetadata: targets_metadata]
   end
 
@@ -48,11 +47,9 @@ defmodule  ExConfServer.Processors.UnitTestProcessor do
     if nb > 0 do
       1..nb
       |> Enum.to_list
-      |> Enum.reduce(%{},
-                     fn(_, acc) ->
-                       targeting_obj = generateTargeting(targetingData, targetsMetadata)
-                       Map.put(acc, targeting_obj["adid"], targeting_obj)
-                     end)
+      |> Enum.map(fn(_) -> Task.async(fn -> generateTargeting(targetingData, targetsMetadata) end)end)
+      |> Enum.map(&(Task.await(&1)))
+      |> Enum.reduce(%{}, &(Map.put(&2, &1["adid"], &1)))      
     else
       %{}
     end

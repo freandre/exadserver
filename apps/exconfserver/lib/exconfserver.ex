@@ -15,7 +15,7 @@ defmodule ExConfServer do
   end
 
   @doc """
-  Retreive an ad based on its id or a list of ads if : all is provided
+  Retreive an ad based on its id or a list of ads if :all is provided
   """
   def getAd(server, adId \\ :all) do
     GenServer.call(server, {:getAd, adId}, :infinity)
