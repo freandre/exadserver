@@ -5,8 +5,8 @@ defmodule ExAdServerBench do
   @numberOfAds 20000
 
   setup_all do
-    {:ok, configserver} = ExConfServer.start_link({"./test/resources/targetingData.json", @numberOfAds})
-    {:ok, adserver} = ExAdServer.start_link(ExConfServer.getMetadata(configserver))
+    {:ok, configserver} = ExConfServer.start_link(:configServer, {"./test/resources/targetingData.json", @numberOfAds})
+    {:ok, adserver} = ExAdServer.start_link(:adServer, ExConfServer.getMetadata(configserver))
 
     ExConfServer.getAd(configserver)
     |> Enum.each(&ExAdServer.loadAd(adserver, &1))
@@ -27,14 +27,14 @@ defmodule ExAdServerBench do
     Enum.at(distinctValues, :rand.uniform(length(distinctValues)) -1 )
   end
 
-  bench "TypedSet filtering on 2 targets (1 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
+  bench "AdServer filtering on 2 targets (1 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
     cfg = bench_context[:config]
     ExAdServer.filterAd(bench_context[:adServer], %{"country" => cfg["country"],
                                                     "support" => "google.com"})
     :ok
   end
 
-  bench "TypedSet filtering on 3 targets (2 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
+  bench "AdServer filtering on 3 targets (2 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
     cfg = bench_context[:config]
     ExAdServer.filterAd(bench_context[:adServer], %{"country" => cfg["country"],
                                                     "language" => cfg["language"],
@@ -42,7 +42,7 @@ defmodule ExAdServerBench do
     :ok
   end
 
-  bench "TypedSet filtering on 4 targets (3 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
+  bench "AdServer filtering on 4 targets (3 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
     cfg = bench_context[:config]
     ExAdServer.filterAd(bench_context[:adServer], %{"country" => cfg["country"],
                                                     "language" => cfg["language"],
@@ -51,7 +51,7 @@ defmodule ExAdServerBench do
     :ok
   end
 
-  bench "TypedSet filtering on 5 targets (4 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
+  bench "AdServer filtering on 5 targets (4 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
     cfg = bench_context[:configServer]
     ExAdServer.filterAd(bench_context[:adServer], %{"country" => cfg["country"],
                                                     "language" => cfg["language"],
@@ -61,7 +61,7 @@ defmodule ExAdServerBench do
     :ok
   end
 
-  bench "TypedSet filtering on 6 targets (5 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
+  bench "AdServer filtering on 6 targets (5 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
     cfg = bench_context[:configServer]
     ExAdServer.filterAd(bench_context[:adServer], %{"country" => cfg["country"],
                                                     "language" => cfg["language"],
