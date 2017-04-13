@@ -24,10 +24,6 @@ defmodule ExAdServer.Utils.Storage do
   Helper function to create a named data store
   """
   def createStore(store_name) do
-    if ETS.info(store_name) != :undefined do
-      IO.puts("FUUUUUUUUUUUUUUUUUUUUUCKKKK")
-    else
-      ETS.new(store_name, [:named_table])
-    end
+    Eternal.start_link(store_name, [:named_table])
   end
 end

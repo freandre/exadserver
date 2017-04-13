@@ -15,8 +15,8 @@ defmodule ExAdServer do
   @doc """
   Starts the server.
   """
-  def start_link(targetMetadata) do
-    GenServer.start_link(__MODULE__, targetMetadata, [])
+  def start_link(name, targetMetadata) do
+    GenServer.start_link(__MODULE__, targetMetadata, [name: name])
   end
 
   @doc """
@@ -53,7 +53,7 @@ defmodule ExAdServer do
   def init(targetMetadata) do
     createStore(:ads_store)
     createStore(:bit_ix_to_ads_store)
-    metadata = getMetadata(targetMetadata)
+    metadata = prepareMetadata(targetMetadata)
     {:ok, [maxIndex: 0, targetMetadata: metadata]}
   end
 
@@ -101,14 +101,14 @@ defmodule ExAdServer do
   ## most of the request, followed by infinite and finally the most computer
   ## intensive geolocation. Finite set are  aggregated to handle bitwise
   ## filtering
-  defp getMetadata(targetMetadata) do
-    Logger.debug fn -> "[adserver] - Entering getMetadata:\n #{inspect(targetMetadata)}" end
+  defp prepareMetadata(targetMetadata) do
+    Logger.debug fn -> "[adserver] - Entering prepareMetadata:\n #{inspect(targetMetadata)}" end
 
     ret = Indexes.FiniteKeyProcessor.generateMetadata(targetMetadata) ++
     Indexes.InfiniteKeyProcessor.generateMetadata(targetMetadata) ++
     Indexes.GeoKeyProcessor.generateMetadata(targetMetadata)
 
-    Logger.debug fn -> "[adserver] - Exiting getMetadata:\n#{inspect(ret)}" end
+    Logger.debug fn -> "[adserver] - Exiting prepareMetadata:\n#{inspect(ret)}" end
 
     ret
   end

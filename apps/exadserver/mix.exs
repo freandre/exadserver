@@ -23,7 +23,7 @@ defmodule ExAdServer.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger],
+    [extra_applications: [:logger, :eternal],
     mod: {ExAdServer.Application, []}]
   end
 
@@ -43,6 +43,7 @@ defmodule ExAdServer.Mixfile do
   defp deps do
     [
       {:exconfserver, in_umbrella: true},
+      {:eternal, "~> 1.1"},
       {:geohash, "~> 1.0"},
       {:benchfella, "~> 0.3.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
