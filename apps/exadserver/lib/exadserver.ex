@@ -70,17 +70,18 @@ defmodule ExAdServer do
     num_ads = state[:maxIndex]
     state = Keyword.put(state, :maxIndex, num_ads + 1)
 
-    Task.start(fn ->
-                ETS.insert(:ads_store, {adConf["adid"],  adConf})
-                ETS.insert(:bit_ix_to_ads_store, {num_ads, adConf["adid"]})
+    ETS.insert(:ads_store, {adConf["adid"],  adConf})
+    ETS.insert(:bit_ix_to_ads_store, {num_ads, adConf["adid"]})
 
-                Enum.each(state[:targetMetadata],
-                          fn({indexName, indexProcessor, indexMetaData}) ->
-                            Task.start(fn ->
-                              indexProcessor.generateAndStoreIndex({adConf, num_ads}, {indexName, indexMetaData})
-                            end)
-                          end)
-               end)
+    # Make the index storage parallel
+    state[:targetMetadata]
+    |> Enum.map(fn({indexName, indexProcessor, indexMetaData}) ->
+                  #Task.async(fn ->
+                               indexProcessor.generateAndStoreIndex({adConf, num_ads},
+                                                                    {indexName, indexMetaData})
+                             #end)
+                end)
+    #|> Enum.map(&(Task.await(&1)))
 
     {:reply, :ok, state}
   end
@@ -95,16 +96,20 @@ defmodule ExAdServer do
 
   ## handle_call callback for :filter, performs some targeting based on a
   ## targeting request
-  def handle_call({:filter, adRequest}, _from, state) do
+  def handle_call({:filter, adRequest}, from, state) do
     target_metadata = state[:targetMetadata]
-    ret = Enum.reduce_while(target_metadata, :first,
-                      fn({indexName, indexProcessor, indexMetaData}, acc) ->
-                        set = indexProcessor.findInIndex(adRequest,
-                                          {indexName, indexMetaData}, acc)
 
-                        checkMainStopCondition(set, MapSet.size(set))
-                      end)
-    {:reply, ret, state}
+    Task.start(fn ->
+                 ret = Enum.reduce_while(target_metadata, :first,
+                   fn({indexName, indexProcessor, indexMetaData}, acc) ->
+                     set = indexProcessor.findInIndex(adRequest,
+                                                      {indexName, indexMetaData}, acc)
+
+                     checkMainStopCondition(set, MapSet.size(set))
+                   end)
+                 GenServer.reply(from, ret)
+               end)
+    {:noreply, state}
   end
 
   ## Private functions
