@@ -6,18 +6,20 @@ defmodule ExJSONRPCClient do
   alias JSONRPC2.Clients.TCP
 
   def start(host, port) do
-    TCP.start(host, port, __MODULE__)
+    :ok = TCP.start(host, port, __MODULE__)
   end
 
   def hello(name) do
-    TCP.call(__MODULE__, "hello", name)
+    {:ok, ret} = TCP.call(__MODULE__, "hello", [name])
+    IO.puts(ret)
   end
 
   def filterAd() do
     adRequest = ["country", "language", "iab", "hour", "minute"]
     |> Enum.reduce(%{}, &(Map.put(&2, &1, pickValue(ExConfServer.getMetadata(ConfServer, &1)["distinctvalues"]))))
 
-    TCP.call(__MODULE__, "filterAd", adRequest)
+    {:ok, ret} = TCP.call(__MODULE__, "filterAd", adRequest)
+    ret
   end
 
   ## Private functions
