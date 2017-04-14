@@ -32,10 +32,4 @@ defmodule ExJSONRPCClientHTTPBench do
     Enum.at(distinctValues, :rand.uniform(length(distinctValues)) -1 )
   end
 
-  bench "AdServer filtering on 2 targets (1 finite 1 inifinite) on ads 20000 inventory" do
-    cfg = bench_context[:config]
-    ExJSONRPCClientHTTP.filterAd(@address, %{"country" => cfg["country"],
-                                             "support" => "google.com"})
-    :ok
-  end
 end

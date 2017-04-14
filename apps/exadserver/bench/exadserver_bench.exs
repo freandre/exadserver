@@ -57,7 +57,7 @@ defmodule ExAdServerBench do
   end
 
   bench "AdServer filtering on 5 targets (4 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
-    cfg = bench_context[:configServer]
+    cfg = bench_context[:config]
     ExAdServer.filterAd(bench_context[:adServer], %{"country" => cfg["country"],
                                                     "language" => cfg["language"],
                                                     "hour" => cfg["hour"],
@@ -67,7 +67,7 @@ defmodule ExAdServerBench do
   end
 
   bench "AdServer filtering on 6 targets (5 finite 1 inifinite) on #{@numberOfAds} ads inventory" do
-    cfg = bench_context[:configServer]
+    cfg = bench_context[:config]
     ExAdServer.filterAd(bench_context[:adServer], %{"country" => cfg["country"],
                                                     "language" => cfg["language"],
                                                     "iab" => cfg["iab"],

@@ -36,10 +36,14 @@ defmodule ExJSONRPCClientTCPBench do
     Enum.at(distinctValues, :rand.uniform(length(distinctValues)) -1 )
   end
 
-  bench "AdServer filtering on 2 targets (1 finite 1 inifinite) on ads 20000 inventory" do
+  bench "Filtering on 6 targets on 5000 ads inventory " do
     cfg = bench_context[:config]
     ExJSONRPCClientTCP.filterAd(%{"country" => cfg["country"],
-                               "support" => "google.com"})
+                                  "language" => cfg["language"],
+                                  "iab" => cfg["iab"],
+                                  "hour" => cfg["hour"],
+                                  "minute" => cfg["minute"],
+                                  "support" => "google.com"})
     :ok
   end
 end
