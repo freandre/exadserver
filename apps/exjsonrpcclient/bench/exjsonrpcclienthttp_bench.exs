@@ -1,14 +1,20 @@
 # bench/basic_bench.exs
-defmodule ExJSONRPCClientBench do
+defmodule ExJSONRPCClientHTTPBench do
   use Benchfella
 
+  @address "http://localhost:8080/"
+
   setup_all do
-    Application.ensure_all_started(:shackle)
-    ExJSONRPCClient.start("localhost", 8181)
+    Application.ensure_all_started(:hackney)
+    Application.ensure_all_started(:jsonrpc2)
+
+    ExJSONRPCClientHTTP.hello(@address, "Bench")
 
     # ok just use the local instance to generate data from metadata
     # we should definitely use distribution here
     ExConfServer.start_link(:configServer, {"./test/resources/targetingData.json", 0})
+
+    {:ok, []}
   end
 
   teardown_all _ do
@@ -28,8 +34,8 @@ defmodule ExJSONRPCClientBench do
 
   bench "AdServer filtering on 2 targets (1 finite 1 inifinite) on ads 20000 inventory" do
     cfg = bench_context[:config]
-    ExJSONRPCClient.filterAd(%{"country" => cfg["country"],
-                               "support" => "google.com"})
+    ExJSONRPCClientHTTP.filterAd(@address, %{"country" => cfg["country"],
+                                             "support" => "google.com"})
     :ok
   end
 end

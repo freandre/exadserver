@@ -19,8 +19,7 @@ defmodule ExJSONRPCClient.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger, :jsonrpc2, :poison, :shackle],
-     mod: {ExJSONRPCClient.Application, []}]
+    [extra_applications: [:logger, :jsonrpc2, :poison, :shackle, :hackney]]
   end
 
   # Dependencies can be Hex packages:
@@ -43,6 +42,7 @@ defmodule ExJSONRPCClient.Mixfile do
       {:jsonrpc2, "~> 1.0"},
       {:poison, "~> 3.1"},
       {:shackle, "~> 0.5"},
+      {:hackney, "~> 1.7"},
       {:benchfella, "~> 0.3.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:credo, "~> 0.7", only: [:dev, :test]}

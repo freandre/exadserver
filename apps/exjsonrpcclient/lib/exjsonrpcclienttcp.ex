@@ -1,4 +1,4 @@
-defmodule ExJSONRPCClient do
+defmodule ExJSONRPCClientTCP do
   @moduledoc """
   Simple communication module to hit the TCP API
   """
@@ -9,7 +9,14 @@ defmodule ExJSONRPCClient do
   Starts the server.
   """
   def start(host, port) do
-    :ok = TCP.start(host, port, __MODULE__)
+    TCP.start(host, port, __MODULE__)
+  end
+
+  @doc """
+  Stops the server.
+  """
+  def stop() do
+    TCP.stop(__MODULE__)
   end
 
   @doc """
