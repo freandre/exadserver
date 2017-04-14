@@ -39,6 +39,7 @@ defmodule Exjsonrpcclient.Mixfile do
   defp deps do
     [
       {:exconfserver, in_umbrella: true},
+      {:exjsonrpcserver, in_umbrella: true},
       {:jsonrpc2, "~> 1.0"},
       {:poison, "~> 3.1"},
       {:shackle, "~> 0.5"},

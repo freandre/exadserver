@@ -10,20 +10,18 @@ defmodule ExJSONRPCServer.Application do
 
     tcp_opts = generateTCPOptions()
 
-    #JSONRPC2.Servers.TCP.start_listener(ExJSONRPCServer.Handler, tcp_opts[:port], tcp_opts[:opts])
-    #JSONRPC2.Servers.HTTP.http(ExJSONRPCServer.Handler, generateHTTPOptions())
+    JSONRPC2.Servers.TCP.start_listener(ExJSONRPCServer.Handler, tcp_opts[:port], tcp_opts[:opts])
+    JSONRPC2.Servers.HTTP.http(ExJSONRPCServer.Handler, generateHTTPOptions())
 
     # Define workers and child supervisors to be supervised
     children = [
       # Starts a worker by calling: Exjsonrpcclient.Worker.start_link(arg1, arg2, arg3)
       # worker(Exjsonrpcclient.Worker, [arg1, arg2, arg3]),
-      Task.start(fn -> JSONRPC2.Servers.TCP.start_listener(ExJSONRPCServer.Handler, tcp_opts[:port], tcp_opts[:opts]) end),
-      Task.start(fn -> JSONRPC2.Servers.HTTP.http(ExJSONRPCServer.Handler, generateHTTPOptions()) end)
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Exjsonrpcclient.Supervisor]
+    opts = [strategy: :one_for_one, name: ExJSONRPCServer.Supervisor]
     Supervisor.start_link(children, opts)
   end
 

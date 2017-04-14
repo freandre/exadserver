@@ -12,7 +12,7 @@ defmodule ExAdServer.Application do
     children = [
       # Starts a worker by calling: ExAdServer.Worker.start_link(arg1, arg2, arg3)
       # worker(ExAdServer.Worker, [arg1, arg2, arg3]),
-      worker(ExAdServer, [AdServer, ExConfServer.getMetadata(ConfServer)]),
+      worker(ExAdServer, [AdServer, ExConfServer.getMetadata(ConfServer)])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
