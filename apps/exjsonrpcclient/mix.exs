@@ -43,6 +43,7 @@ defmodule ExJSONRPCClient.Mixfile do
       {:jsonrpc2, "~> 1.0"},
       {:poison, "~> 3.1"},
       {:shackle, "~> 0.5"},
+      {:benchfella, "~> 0.3.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:credo, "~> 0.7", only: [:dev, :test]}
     ]

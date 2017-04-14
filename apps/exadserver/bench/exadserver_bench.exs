@@ -8,7 +8,7 @@ defmodule ExAdServerBench do
     {:ok, configserver} = ExConfServer.start_link(:configServer, {"./test/resources/targetingData.json", @numberOfAds})
     {:ok, adserver} = ExAdServer.start_link(:adServer, ExConfServer.getMetadata(configserver))
 
-    ExConfServer.getAd(configserver)
+    ExConfServer.getConf(configserver)
     |> Enum.each(&ExAdServer.loadAd(adserver, &1))
 
     {:ok, [configServer: configserver, adServer: adserver]}

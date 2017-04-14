@@ -24,7 +24,7 @@ defmodule  ExConfServer.Processors.UnitTestProcessor do
     [adsMap: ads_map, targetsMetadata: targets_metadata]
   end
 
-  def getAd(keywordArgs, adId) do
+  def getConf(keywordArgs, adId) do
     ads_map = keywordArgs[:adsMap]
     case adId do
       :all -> Enum.map(ads_map, fn({_, ad}) -> ad end)
@@ -49,7 +49,7 @@ defmodule  ExConfServer.Processors.UnitTestProcessor do
       |> Enum.to_list
       |> Enum.map(fn(_) -> Task.async(fn -> generateTargeting(targetingData, targetsMetadata) end)end)
       |> Enum.map(&(Task.await(&1)))
-      |> Enum.reduce(%{}, &(Map.put(&2, &1["adid"], &1)))      
+      |> Enum.reduce(%{}, &(Map.put(&2, &1["adid"], &1)))
     else
       %{}
     end

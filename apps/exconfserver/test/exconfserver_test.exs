@@ -4,10 +4,10 @@ defmodule ExconfserverTest do
   test "UnitTestConfig init", context do
     number = 10
     {:ok, configserver} = ExConfServer.start_link(context.test, {"./test/resources/simpleTargetingData.json", number})
-    returned = length(ExConfServer.getAd(configserver))
+    returned = length(ExConfServer.getConf(configserver))
     assert(returned == number,
           """
-          Number of generated ad and returned ones are not identical
+          Number of generated conf and returned ones are not identical
           Expected:
           #{number}
           Had:

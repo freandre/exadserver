@@ -15,10 +15,10 @@ defmodule ExConfServer do
   end
 
   @doc """
-  Retreive an ad based on its id or a list of ads if :all is provided
+  Retreive a configuration based on its id or a list of ads if :all is provided
   """
-  def getAd(server, adId \\ :all) do
-    GenServer.call(server, {:getAd, adId}, :infinity)
+  def getConf(server, adId \\ :all) do
+    GenServer.call(server, {:getConf, adId}, :infinity)
   end
 
   @doc """
@@ -52,8 +52,8 @@ defmodule ExConfServer do
   @doc """
   handle_call delegated to processor set in state
   """
-  def handle_call({:getAd, adId}, _from, state) do
-    {:reply, state[:processor].getAd(state[:data], adId), state}
+  def handle_call({:getConf, adId}, _from, state) do
+    {:reply, state[:processor].getConf(state[:data], adId), state}
   end
 
   @doc """
