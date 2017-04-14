@@ -97,6 +97,7 @@ defmodule ExAdServer do
   ## handle_call callback for :filter, performs some targeting based on a
   ## targeting request
   def handle_call({:filter, adRequest}, from, state) do
+    Logger.debug fn -> "[adserver] - Entering filter ad:\n #{inspect(adRequest)}" end
     target_metadata = state[:targetMetadata]
 
     Task.start(fn ->
@@ -107,6 +108,7 @@ defmodule ExAdServer do
 
                      checkMainStopCondition(set, MapSet.size(set))
                    end)
+                 Logger.debug fn -> "[adserver] - Exiting filter ad:\n #{inspect(ret)}" end
                  GenServer.reply(from, ret)
                end)
     {:noreply, state}

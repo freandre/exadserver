@@ -1,4 +1,4 @@
-defmodule Exjsonrpcclient.Mixfile do
+defmodule ExJSONRPCClient.Mixfile do
   use Mix.Project
 
   def project do

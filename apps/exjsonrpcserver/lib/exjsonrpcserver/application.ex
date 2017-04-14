@@ -15,8 +15,8 @@ defmodule ExJSONRPCServer.Application do
 
     # Define workers and child supervisors to be supervised
     children = [
-      # Starts a worker by calling: Exjsonrpcclient.Worker.start_link(arg1, arg2, arg3)
-      # worker(Exjsonrpcclient.Worker, [arg1, arg2, arg3]),
+      # Starts a worker by calling: ExJSONRPCServer.Worker.start_link(arg1, arg2, arg3)
+      # worker(ExJSONRPCServer.Worker, [arg1, arg2, arg3]),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

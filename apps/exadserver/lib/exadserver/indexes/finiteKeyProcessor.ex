@@ -106,9 +106,13 @@ defmodule ExAdServer.Indexes.FiniteKeyProcessor do
   ## Find data in a unique index
   defp findInUniqueIndex(request, {indexName, _}, acc) do
     value = getValue(request[indexName])
-    [{^value, data}] = ETS.lookup(getIxAtom(indexName), value)
 
-    buildFindInUniqueIndex(acc, data)
+    Logger.debug fn -> "[FiniteKeyProcessor] - findInUniqueIndex #{indexName} in #{inspect(request)}:\n#{value}" end
+
+    case ETS.lookup(getIxAtom(indexName), value) do
+        [{^value, data}] -> buildFindInUniqueIndex(acc, data)
+        _ -> BitUtils.new
+    end
   end
 
   ## Shall we stop to loop
