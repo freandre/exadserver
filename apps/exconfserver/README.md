@@ -1,19 +1,10 @@
 # Exconfserver
 
-**TODO: Add description**
+Simple configuration service allowing to retreive information on the targeted data.
 
-## Installation
+Finite, inifinite and geoloc data are handled in the tests for now.
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `exconfserver` to your list of dependencies in `mix.exs`:
+For finite type, a list of disctinct values for the attribute is returned.
 
-```elixir
-def deps do
-  [{:exconfserver, "~> 0.1.0"}]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/exconfserver](https://hexdocs.pm/exconfserver).
-
+TODO:
+* Add real DB implementation

@@ -10,26 +10,16 @@ use Mix.Config
 
 # You can configure for your application as:
 #
-#     config :exjsonrpcserver, key: :value
+#     config :exjsonrpcclient, key: :value
 #
 # And access this configuration in your application as:
 #
-#     Application.get_env(:exjsonrpcserver, :key)
+#     Application.get_env(:exjsonrpcclient, :key)
 #
 # Or configure a 3rd-party app:
 #
 #     config :logger, level: :info
 #
-
-config :logger, level: :info
-
-config :exjsonrpcserver, TCP,
-  port: 8181,
-  num_acceptors: 100
-
-config :exjsonrpcserver, HTTP,
-  port: 8080,
-  num_acceptors: 100
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
