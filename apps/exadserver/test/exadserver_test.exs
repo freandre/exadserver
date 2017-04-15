@@ -89,7 +89,7 @@ defmodule ExAdServerTest do
     ExConfServer.stop(configserver)
   end
 
-  test "Stop adServer properly", context do
+  test "Stop adServer properly" do
     {:ok, configserver} = ExConfServer.start_link(:confserver, {"./test/resources/simpleTargetingData.json", 0})
     {:ok, adserver} = ExAdServer.start_link(:adserver, ExConfServer.getMetadata(configserver))
 
