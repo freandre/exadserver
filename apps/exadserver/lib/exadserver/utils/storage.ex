@@ -3,6 +3,7 @@ defmodule ExAdServer.Utils.Storage do
   Storage helper module.
   """
 
+  require Logger
   alias :ets, as: ETS
 
   @doc """
@@ -24,6 +25,25 @@ defmodule ExAdServer.Utils.Storage do
   Helper function to create a named data store
   """
   def createStore(store_name) do
-    Eternal.start(store_name, [:named_table, {:read_concurrency, true}])
+    Logger.debug "[storage] - Creating ETS store #{store_name}"
+    {:ok, val} = Eternal.start(store_name, [:named_table, {:read_concurrency, true}])
+    val
+  end
+
+  @doc """
+  Helper function to create a named bag data store
+  """
+  def createBagStore(store_name) do
+    Logger.debug "[storage] - Creating ETS store #{store_name}"
+    {:ok, val} = Eternal.start(store_name, [:named_table, :bag, {:read_concurrency, true}])
+    val
+  end
+
+  @doc """
+  Helper function to delete a data store
+  """
+  def deleteStore(store_name) do
+    Logger.debug "[storage] - Deleting ETS store #{store_name}"
+    Eternal.stop(store_name)
   end
 end

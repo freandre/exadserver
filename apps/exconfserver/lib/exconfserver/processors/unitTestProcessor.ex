@@ -40,6 +40,9 @@ defmodule  ExConfServer.Processors.UnitTestProcessor do
     end
   end
 
+  def cleanup() do
+  end
+
   ## Private functions
 
   ## Generate random ad configuration

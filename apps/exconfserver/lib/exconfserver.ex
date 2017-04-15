@@ -62,4 +62,9 @@ defmodule ExConfServer do
   def handle_call({:getMetadata, targetName}, _from, state) do
     {:reply, state[:processor].getMetadata(state[:data], targetName), state}
   end
+
+  def terminate(_, state) do
+    state[:processor].cleanup()
+    :ok
+  end
 end

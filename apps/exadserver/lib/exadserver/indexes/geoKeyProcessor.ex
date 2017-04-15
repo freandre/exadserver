@@ -98,6 +98,10 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
                 end)
   end
 
+  def cleanup(indexName, _) do
+    deleteStore(getIxAtom(indexName))
+  end
+
   ## Private functions
 
   ## Create a list of geotargets to deal with

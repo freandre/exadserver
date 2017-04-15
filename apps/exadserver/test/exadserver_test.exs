@@ -1,12 +1,9 @@
 defmodule ExAdServerTest do
   use ExAdServerCase, async: true
 
-  defp genCS(atom), do: String.to_atom(Atom.to_string(atom) <> "_CS")
-  defp genAS(atom), do: String.to_atom(Atom.to_string(atom) <> "_AS")
-
   test "That our adServer can load some basic data", context do
-    {:ok, configserver} = ExConfServer.start_link(genCS(context.test), {"./test/resources/simpleTargetingData.json", 0})
-    {:ok, adserver} = ExAdServer.start_link(genAS(context.test), ExConfServer.getMetadata(configserver))
+    {:ok, configserver} = ExConfServer.start_link(:confserver, {"./test/resources/simpleTargetingData.json", 0})
+    {:ok, adserver} = ExAdServer.start_link(:adserver, ExConfServer.getMetadata(configserver))
 
     Enum.each(context.simpleAdsData, &ExAdServer.loadAd(adserver, &1))
     Enum.each(context.simpleAdsData,
@@ -20,13 +17,14 @@ defmodule ExAdServerTest do
                       Had:
                       #{inspect(returned)}
                       """)
-              end
-            )
+              end)
+    ExAdServer.stop(adserver)
+    ExConfServer.stop(configserver)
   end
 
   test "That our adServer can update some basic data", context do
-    {:ok, configserver} = ExConfServer.start_link(genCS(context.test), {"./test/resources/simpleTargetingData.json", 0})
-    {:ok, adserver} = ExAdServer.start_link(genAS(context.test), ExConfServer.getMetadata(configserver))
+    {:ok, configserver} = ExConfServer.start_link(:confserver, {"./test/resources/simpleTargetingData.json", 0})
+    {:ok, adserver} = ExAdServer.start_link(:adserver, ExConfServer.getMetadata(configserver))
 
     Enum.each(context.simpleAdsData, &ExAdServer.loadAd(adserver, &1))
 
@@ -44,11 +42,13 @@ defmodule ExAdServerTest do
           Had:
           #{inspect(returned)}
           """)
+    ExAdServer.stop(adserver)
+    ExConfServer.stop(configserver)
   end
 
   test "That our adServer returns :notfound", context do
-    {:ok, configserver} = ExConfServer.start_link(genCS(context.test), {"./test/resources/simpleTargetingData.json", 0})
-    {:ok, adserver} = ExAdServer.start_link(genAS(context.test), ExConfServer.getMetadata(configserver))
+    {:ok, configserver} = ExConfServer.start_link(:confserver, {"./test/resources/simpleTargetingData.json", 0})
+    {:ok, adserver} = ExAdServer.start_link(:adserver, ExConfServer.getMetadata(configserver))
 
     Enum.each(context.simpleAdsData, &ExAdServer.loadAd(adserver, &1))
 
@@ -62,11 +62,13 @@ defmodule ExAdServerTest do
           Had:
           #{inspect(returned)}
           """)
+    ExAdServer.stop(adserver)
+    ExConfServer.stop(configserver)
   end
 
   test "That our adServer filter ads properly", context do
-    {:ok, configserver} = ExConfServer.start_link(genCS(context.test), {"./test/resources/simpleTargetingData.json", 0})
-    {:ok, adserver} = ExAdServer.start_link(genAS(context.test), ExConfServer.getMetadata(configserver))
+    {:ok, configserver} = ExConfServer.start_link(:confserver, {"./test/resources/simpleTargetingData.json", 0})
+    {:ok, adserver} = ExAdServer.start_link(:adserver, ExConfServer.getMetadata(configserver))
 
     Enum.each(context.simpleAdsData, &ExAdServer.loadAd(adserver, &1))
 
@@ -83,11 +85,13 @@ defmodule ExAdServerTest do
                         #{inspect(returned)}
                         """)
               end)
+    ExAdServer.stop(adserver)
+    ExConfServer.stop(configserver)
   end
 
   test "Stop adServer properly", context do
-    {:ok, configserver} = ExConfServer.start_link(genCS(context.test), {"./test/resources/simpleTargetingData.json", 0})
-    {:ok, adserver} = ExAdServer.start_link(genAS(context.test), ExConfServer.getMetadata(configserver))
+    {:ok, configserver} = ExConfServer.start_link(:confserver, {"./test/resources/simpleTargetingData.json", 0})
+    {:ok, adserver} = ExAdServer.start_link(:adserver, ExConfServer.getMetadata(configserver))
 
     assert(:ok == ExAdServer.stop(adserver),
           """

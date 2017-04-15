@@ -19,8 +19,6 @@ defmodule  ExAdServer.Indexes.BehaviorKeysProcessor do
   """
   @callback generateAndStoreIndex(Tuple.t, Tuple.t) :: Map.t
 
-  # validateRequest
-
   @doc """
   Perform a search in an index
   first argument is a targeting ad
@@ -29,4 +27,11 @@ defmodule  ExAdServer.Indexes.BehaviorKeysProcessor do
   returns a set of matching ad configuration for this index
   """
   @callback findInIndex(Map.t, Tuple.t, MapSet.t) :: MapSet.t
+
+  @doc """
+  Clean data
+  first argument is index name
+  second argument is index metadata
+  """
+  @callback cleanup(String.t, Map.t) :: any
 end

@@ -50,6 +50,10 @@ defmodule ExAdServer.Indexes.FiniteKeyProcessor do
     buildFindInIndex(acc, ret)
   end
 
+  def cleanup(_, indexMetadata) do
+    Enum.each(indexMetadata, fn({name, _}) -> deleteStore(getIxAtom(name))end)
+  end
+
   ## Private functions
 
   ## Update the metadata with an unknown distinct value

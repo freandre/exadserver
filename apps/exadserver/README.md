@@ -13,3 +13,4 @@ Finding a set of configuraiton is done by searching in index sequentially, begin
 
 TODO:
 * Deal with update of a configuration
+* Modify inifinite index to speed it up (add ets stor for inclusive values)  

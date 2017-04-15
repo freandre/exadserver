@@ -16,6 +16,7 @@ defmodule ExAdServer do
   Starts the server.
   """
   def start_link(name, targetMetadata) do
+    Logger.debug "[adserver] - start_link"
     GenServer.start_link(__MODULE__, targetMetadata, [name: name])
   end
 
@@ -103,15 +104,27 @@ defmodule ExAdServer do
     Task.start(fn ->
                  ret = Enum.reduce_while(target_metadata, :first,
                    fn({indexName, indexProcessor, indexMetaData}, acc) ->
-                     set = indexProcessor.findInIndex(adRequest,
-                                                      {indexName, indexMetaData}, acc)
-
+                     {time, set} = :timer.tc(fn -> indexProcessor.findInIndex(adRequest,
+                                                      {indexName, indexMetaData}, acc) end)
+IO.puts(indexName <> ": " <> inspect(time))
                      checkMainStopCondition(set, MapSet.size(set))
                    end)
                  Logger.debug fn -> "[adserver] - Exiting filter ad:\n #{inspect(ret)}" end
                  GenServer.reply(from, ret)
                end)
     {:noreply, state}
+  end
+
+  def terminate(_, state) do
+    Logger.debug "[adserver] - terminate"
+    state[:targetMetadata]
+    |> Enum.each(fn({indexName, indexProcessor, indexMetaData}) ->
+                  indexProcessor.cleanup(indexName, indexMetaData)
+                end)
+
+    deleteStore(:bit_ix_to_ads_store)
+    deleteStore(:ads_store)
+    :ok
   end
 
   ## Private functions
