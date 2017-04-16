@@ -106,7 +106,7 @@ defmodule ExAdServer do
                    fn({indexName, indexProcessor, indexMetaData}, acc) ->
                      {time, set} = :timer.tc(fn -> indexProcessor.findInIndex(adRequest,
                                                       {indexName, indexMetaData}, acc) end)
-IO.puts(indexName <> ": " <> inspect(time))
+#IO.puts(indexName <> ": " <> inspect(time))
                      checkMainStopCondition(set, MapSet.size(set))
                    end)
                  Logger.debug fn -> "[adserver] - Exiting filter ad:\n #{inspect(ret)}" end

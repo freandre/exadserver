@@ -2,6 +2,7 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
   @moduledoc """
   Infinite key processor implementation.
   """
+  @compile {:parse_transform, :ms_transform}
 
   @behaviour ExAdServer.Indexes.BehaviorKeysProcessor
 
@@ -17,6 +18,7 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
     |> Enum.filter_map(fn ({_, v}) -> v["type"] == "infinite" end,
                        fn ({k, v}) ->
                          createBagStore(getIxAtom(k))
+                         createBagStore(getIxAtom(k <> "Full"))
                          {k, ExAdServer.Indexes.InfiniteKeyProcessor, v}
                        end)
     Logger.debug fn -> "[InfiniteKeyProcessor] - Exiting generateMetadata returning:\n#{inspect(ret)}" end
@@ -31,15 +33,56 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
       Logger.debug fn -> "[InfiniteKeyProcessor] - generateAndStoreIndex storing:\n#{inspect(conf_data)}" end
       Enum.each(conf_data, &(ETS.insert(getIxAtom(indexName), {&1, ad_conf["adid"]})))
     end
+    Enum.each(conf_data, &(ETS.insert(getIxAtom(indexName <> "Full"), {{conf_inclusive, &1}, ad_conf["adid"]})))
   end
 
-  def findInIndex(ad, name, acc), do: findInIndexOpt(ad, name, acc)
+  def findInIndex(ad, name, acc), do: findInIndexETSLookup(ad, name, acc)
 
-  def findInIndexOpt(adRequest, {index_name, _}, accumulator) do
+  def findInIndexETSIncludeExclude(adRequest, {index_name, _}, accumulator) do
     Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex request #{index_name}:\n#{inspect(adRequest)}\n#{inspect(accumulator)}" end
+    value = adRequest[index_name]
 
     # Get the inclusive value
-    ad_ids = ETS.lookup(getIxAtom(index_name), adRequest[index_name])
+    ret = ETS.lookup(getIxAtom(index_name <> "Full"), {true, value})
+    |> Enum.reduce(MapSet.new, fn({_, ad_id}, acc) -> MapSet.put(acc, ad_id) end)
+
+    Logger.debug fn -> "> inclusion value #{index_name} => #{inspect(ret)}" end
+
+    ret = ETS.lookup(getIxAtom(index_name <> "Full"), {true, "all"})
+    |> Enum.reduce(ret, fn({_, ad_id}, acc) -> MapSet.put(acc, ad_id) end)
+
+    Logger.debug fn -> "> inclusion all #{index_name} => #{inspect(ret)}" end
+
+    ret = ETS.select(getIxAtom(index_name <> "Full"), ETS.fun2ms(fn({{inclusive, storedValue}, id})
+                            when
+                              (inclusive == false and storedValue != value
+                                and storedValue != "all")
+                            ->
+                              id
+                            end))
+    |> Enum.reduce(ret, fn(ad_id, acc) -> MapSet.put(acc, ad_id) end)
+
+    Logger.debug fn -> "> inclusion others #{index_name} => #{inspect(ret)}" end
+
+    ret = MapSet.intersection(accumulator, ret)
+
+    Logger.debug fn -> "> intersection #{index_name} => #{inspect(ret)}" end
+
+    # Exclude
+    ret = ETS.lookup(getIxAtom(index_name <> "Full"), {false, value})
+    |> Enum.reduce(ret, fn({_, ad_id}, acc) -> MapSet.delete(acc, ad_id) end)
+
+    Logger.debug fn -> "> exclusion #{index_name} => #{inspect(ret)}" end
+
+    ret
+  end
+
+  def findInIndexETSMapSet(adRequest, {index_name, _}, accumulator) do
+    Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex request #{index_name}:\n#{inspect(adRequest)}\n#{inspect(accumulator)}" end
+    value = adRequest[index_name]
+
+    # Get the inclusive value
+    ad_ids = ETS.lookup(getIxAtom(index_name), value)
     |> Enum.reduce(MapSet.new, fn({_, ad_id}, acc) -> MapSet.put(acc, ad_id) end)
 
     #Add the inclusive all
@@ -57,7 +100,7 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
                     conf_data = ad_conf["targeting"][index_name]["data"]
 
                     cond do
-                      (conf_inclusive == false and ((adRequest[index_name] in conf_data) == false))
+                      (conf_inclusive == false and ((value in conf_data) == false))
                         -> MapSet.put(acc, ad_id)
                       true -> acc
                     end
@@ -68,7 +111,10 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
     MapSet.union(inter, exclude)
   end
 
-  def findInIndexOrg(adRequest, {indexName, _}, accumulator) do
+  def findInIndexETSLookup(adRequest, {indexName, _}, accumulator) do
+    Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex request #{indexName}:\n#{inspect(adRequest)}\n#{inspect(accumulator)}" end
+    value = adRequest[indexName]
+
     Enum.reduce(accumulator, accumulator,
                 fn(ad_id, acc) ->
                   [{^ad_id, ad_conf}] = ETS.lookup(:ads_store, ad_id)
@@ -76,11 +122,11 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
                     conf_data = ad_conf["targeting"][indexName]["data"]
 
                     cond do
-                      conf_inclusive == false and adRequest[indexName] in conf_data
+                      conf_inclusive == false and value in conf_data
                               -> MapSet.delete(acc, ad_id)
                       conf_inclusive == false and conf_data == ["all"]
                               -> MapSet.delete(acc, ad_id)
-                      conf_inclusive == true and ((adRequest[indexName] in conf_data) == false)
+                      conf_inclusive == true and ((value in conf_data) == false)
                                              and conf_data != ["all"]
                               -> MapSet.delete(acc, ad_id)
                       true -> acc
@@ -90,5 +136,6 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
 
   def cleanup(indexName, _) do
     deleteStore(getIxAtom(indexName))
+    deleteStore(getIxAtom(indexName <> "Full"))
   end
 end

@@ -2,7 +2,7 @@
 defmodule ExAdServerBench do
   use Benchfella
 
-  @numberOfAds 20000
+  @numberOfAds 10000
 
   setup_all do
     {:ok, configserver} = ExConfServer.start_link(:configServer, {"./test/resources/targetingData.json", @numberOfAds})
