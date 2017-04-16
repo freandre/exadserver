@@ -7,6 +7,7 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
 
   require Logger
   import ExAdServer.Utils.Storage
+  alias ExAdServer.Utils.ListUtils
   alias :ets, as: ETS
 
   ## Sorted array giving for a bit precision the approximation radius in meters of geohash
@@ -67,7 +68,6 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
                                |> Geohash.neighbors
                                |> Enum.map(fn ({_, key}) -> key end)]
                      end)
-    |> MapSet.new
 
     Logger.debug fn -> "> :#{inspect(ret)}" end
 
@@ -75,27 +75,31 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
   end
 
   def findInIndex(adRequest, {indexName, _}, accumulator) do
+    Logger.debug fn -> "[GeoKeyProcessor] - findInIndex request #{indexName}:\n#{inspect(accumulator)}" end
     hashes = adRequest[indexName]
              |> getGeoHashes
-             |> MapSet.new
 
-    Logger.debug fn -> "[GeoKeyProcessor] - findInIndex hash: #{inspect(hashes)}" end
+    Logger.debug fn -> "> hash => #{inspect(hashes)}" end
 
-    Enum.reduce(accumulator, accumulator,
+    ret = Enum.reduce(accumulator, [],
                 fn(ad_id, acc) ->
                   [{^ad_id, {inclusive, conf_hashes}}] =
                               ETS.lookup(getIxAtom(indexName), ad_id)
 
                     cond do
-                      inclusive == false and
-                          MapSet.size(MapSet.intersection(conf_hashes, hashes)) != 0
-                              -> MapSet.delete(acc, ad_id)
                       inclusive == true and
-                          MapSet.size(MapSet.intersection(conf_hashes, hashes)) == 0
-                              -> MapSet.delete(acc, ad_id)
+                          length(ListUtils.intersect(conf_hashes, hashes)) != 0
+                          -> [ad_id | acc]
+                      inclusive == false and
+                          length(ListUtils.intersect(conf_hashes, hashes)) == 0
+                          -> [ad_id | acc]
                       true -> acc
                     end
                 end)
+
+    Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex exit:\n#{inspect(ret)}" end
+
+    ret
   end
 
   def cleanup(indexName, _) do

@@ -107,7 +107,7 @@ defmodule ExAdServer do
                      {time, set} = :timer.tc(fn -> indexProcessor.findInIndex(adRequest,
                                                       {indexName, indexMetaData}, acc) end)
 #IO.puts(indexName <> ": " <> inspect(time))
-                     checkMainStopCondition(set, MapSet.size(set))
+                     checkMainStopCondition(set)
                    end)
                  Logger.debug fn -> "[adserver] - Exiting filter ad:\n #{inspect(ret)}" end
                  GenServer.reply(from, ret)
@@ -146,6 +146,6 @@ defmodule ExAdServer do
   end
 
   ## Shall we stop to loop
-  defp checkMainStopCondition(set, setsize) when setsize == 0, do: {:halt, set}
-  defp checkMainStopCondition(set, _), do: {:cont, set}
+  defp checkMainStopCondition([] = list), do: {:halt, list}
+  defp checkMainStopCondition(list), do: {:cont, list}
 end

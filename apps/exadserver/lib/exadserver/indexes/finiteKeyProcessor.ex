@@ -8,6 +8,7 @@ defmodule ExAdServer.Indexes.FiniteKeyProcessor do
   require Logger
   import ExAdServer.Utils.Storage
   alias ExAdServer.Utils.BitUtils
+  alias ExAdServer.Utils.ListUtils
   alias :ets, as: ETS
 
   ## Behaviour Callbacks
@@ -36,7 +37,7 @@ defmodule ExAdServer.Indexes.FiniteKeyProcessor do
   end
 
   def findInIndex(adRequest, {_, indexMetadata}, acc) do
-    Logger.debug fn -> "[FiniteKeyProcessor] - findInIndex request:\n#{inspect(adRequest)}" end
+    Logger.debug fn -> "[FiniteKeyProcessor] - findInIndex:\n#{inspect(acc)}" end
 
     ret = indexMetadata
           |> Enum.reduce_while(:first,
@@ -47,7 +48,11 @@ defmodule ExAdServer.Indexes.FiniteKeyProcessor do
                     end)
           |> decodebitField(:bit_ix_to_ads_store)
 
-    buildFindInIndex(acc, ret)
+    ret = buildFindInIndex(acc, ret)
+
+    Logger.debug fn -> "[FiniteKeyProcessor] - findInIndex exit:\n#{inspect(ret)}" end
+
+    ret
   end
 
   def cleanup(_, indexMetadata) do
@@ -111,7 +116,7 @@ defmodule ExAdServer.Indexes.FiniteKeyProcessor do
   defp findInUniqueIndex(request, {indexName, _}, acc) do
     value = getValue(request[indexName])
 
-    Logger.debug fn -> "[FiniteKeyProcessor] - findInUniqueIndex #{indexName} in #{inspect(request)}:\n#{value}" end
+    Logger.debug fn -> "[FiniteKeyProcessor] - findInUniqueIndex #{indexName}:\n#{value}" end
 
     case ETS.lookup(getIxAtom(indexName), value) do
         [{^value, data}] -> buildFindInUniqueIndex(acc, data)
@@ -125,7 +130,7 @@ defmodule ExAdServer.Indexes.FiniteKeyProcessor do
 
   ## Are we in the first iteration ?
   defp buildFindInIndex(:first, data), do: data
-  defp buildFindInIndex(acc, data), do: MapSet.intersection(data, acc)
+  defp buildFindInIndex(acc, data), do: ListUtils.intersect(data, acc)
 
   ## Are we in the first iteration ?
   defp buildFindInUniqueIndex(:first, data), do: data
@@ -154,10 +159,10 @@ defmodule ExAdServer.Indexes.FiniteKeyProcessor do
   defp decodebitField(data, ixToAdIDStore) do
     data
     |> BitUtils.listOfIndexOfOne
-    |> Enum.reduce(MapSet.new,
+    |> Enum.reduce([],
              fn(index, acc) ->
                [{^index, ad_id}] = ETS.lookup(ixToAdIDStore, index)
-               MapSet.put(acc, ad_id)
+               [ad_id | acc]
              end)
   end
 end

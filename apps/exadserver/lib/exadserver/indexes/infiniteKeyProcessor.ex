@@ -8,6 +8,7 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
 
   require Logger
   import ExAdServer.Utils.Storage
+  alias ExAdServer.Utils.ListUtils
   alias :ets, as: ETS
 
   ## Behaviour Callbacks
@@ -36,7 +37,7 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
     Enum.each(conf_data, &(ETS.insert(getIxAtom(indexName <> "Full"), {{conf_inclusive, &1}, ad_conf["adid"]})))
   end
 
-  def findInIndex(ad, name, acc), do: findInIndexETSLookup(ad, name, acc)
+  def findInIndex(ad, name, acc), do: findInIndexETSIncludeExclude(ad, name, acc)
 
   def findInIndexETSIncludeExclude(adRequest, {index_name, _}, accumulator) do
     Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex request #{index_name}:\n#{inspect(adRequest)}\n#{inspect(accumulator)}" end
@@ -44,56 +45,57 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
 
     # Get the inclusive value
     ret = ETS.lookup(getIxAtom(index_name <> "Full"), {true, value})
-    |> Enum.reduce(MapSet.new, fn({_, ad_id}, acc) -> MapSet.put(acc, ad_id) end)
+    |> Enum.map(fn({_, ad_id}) -> ad_id end)
 
     Logger.debug fn -> "> inclusion value #{index_name} => #{inspect(ret)}" end
 
-    ret = ETS.lookup(getIxAtom(index_name <> "Full"), {true, "all"})
-    |> Enum.reduce(ret, fn({_, ad_id}, acc) -> MapSet.put(acc, ad_id) end)
+    retAll = ETS.lookup(getIxAtom(index_name <> "Full"), {true, "all"})
+    |> Enum.map(fn({_, ad_id}) -> ad_id end)
 
-    Logger.debug fn -> "> inclusion all #{index_name} => #{inspect(ret)}" end
+    Logger.debug fn -> "> inclusion all #{index_name} => #{inspect(retAll)}" end
 
-    ret = ETS.select(getIxAtom(index_name <> "Full"), ETS.fun2ms(fn({{inclusive, storedValue}, id})
+    others = ETS.select(getIxAtom(index_name <> "Full"), ETS.fun2ms(fn({{inclusive, storedValue}, id})
                             when
                               (inclusive == false and storedValue != value
                                 and storedValue != "all")
                             ->
                               id
                             end))
-    |> Enum.reduce(ret, fn(ad_id, acc) -> MapSet.put(acc, ad_id) end)
 
     Logger.debug fn -> "> inclusion others #{index_name} => #{inspect(ret)}" end
 
-    ret = MapSet.intersection(accumulator, ret)
+    ret = ListUtils.intersect(accumulator, ret ++ retAll ++ others)
 
     Logger.debug fn -> "> intersection #{index_name} => #{inspect(ret)}" end
 
     # Exclude
-    ret = ETS.lookup(getIxAtom(index_name <> "Full"), {false, value})
-    |> Enum.reduce(ret, fn({_, ad_id}, acc) -> MapSet.delete(acc, ad_id) end)
+    exclude = ETS.lookup(getIxAtom(index_name <> "Full"), {false, value})
+    |> Enum.map(fn({_, ad_id}) -> ad_id end)
+
+    ret = ret -- exclude
 
     Logger.debug fn -> "> exclusion #{index_name} => #{inspect(ret)}" end
 
     ret
   end
 
-  def findInIndexETSMapSet(adRequest, {index_name, _}, accumulator) do
-    Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex request #{index_name}:\n#{inspect(adRequest)}\n#{inspect(accumulator)}" end
+  def findInIndexETSList(adRequest, {index_name, _}, accumulator) do
+    Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex #{index_name}:\n#{inspect(adRequest)}\n#{inspect(accumulator)}" end
     value = adRequest[index_name]
 
     # Get the inclusive value
     ad_ids = ETS.lookup(getIxAtom(index_name), value)
-    |> Enum.reduce(MapSet.new, fn({_, ad_id}, acc) -> MapSet.put(acc, ad_id) end)
+    |> Enum.map(fn({_, ad_id}) -> ad_id end)
 
-    #Add the inclusive all
-    ad_ids = ETS.lookup(getIxAtom(index_name), "all")
-    |> Enum.reduce(ad_ids, fn({_, ad_id}, acc) -> MapSet.put(acc, ad_id) end)
+    # Add the inclusive all
+    ad_ids_all = ETS.lookup(getIxAtom(index_name), "all")
+    |> Enum.map(fn({_, ad_id}) -> ad_id end)
 
-    inter = MapSet.intersection(accumulator, ad_ids)
+    inter = ListUtils.intersect(accumulator, ad_ids ++ ad_ids_all)
     Logger.debug fn -> "> inclusion #{index_name} => #{inspect(inter)}" end
 
     # In the remaining conf id, check the excluding not value pattern
-    exclude = Enum.reduce(MapSet.difference(accumulator, ad_ids), MapSet.new,
+    exclude = Enum.reduce(accumulator -- inter, [],
                 fn(ad_id, acc) ->
                   [{^ad_id, ad_conf}] = ETS.lookup(:ads_store, ad_id)
                     conf_inclusive = ad_conf["targeting"][index_name]["inclusive"]
@@ -101,37 +103,38 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
 
                     cond do
                       (conf_inclusive == false and ((value in conf_data) == false))
-                        -> MapSet.put(acc, ad_id)
+                        -> [ad_id | acc]
                       true -> acc
                     end
                 end)
 
     Logger.debug fn -> "> exclusion #{index_name} => #{inspect(exclude)}" end
 
-    MapSet.union(inter, exclude)
+    inter ++ exclude
   end
 
   def findInIndexETSLookup(adRequest, {indexName, _}, accumulator) do
-    Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex request #{indexName}:\n#{inspect(adRequest)}\n#{inspect(accumulator)}" end
+    Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex request #{indexName}:\n#{inspect(accumulator)}" end
     value = adRequest[indexName]
 
-    Enum.reduce(accumulator, accumulator,
+    ret = Enum.reduce(accumulator, [],
                 fn(ad_id, acc) ->
                   [{^ad_id, ad_conf}] = ETS.lookup(:ads_store, ad_id)
                     conf_inclusive = ad_conf["targeting"][indexName]["inclusive"]
                     conf_data = ad_conf["targeting"][indexName]["data"]
 
                     cond do
-                      conf_inclusive == false and value in conf_data
-                              -> MapSet.delete(acc, ad_id)
-                      conf_inclusive == false and conf_data == ["all"]
-                              -> MapSet.delete(acc, ad_id)
-                      conf_inclusive == true and ((value in conf_data) == false)
-                                             and conf_data != ["all"]
-                              -> MapSet.delete(acc, ad_id)
+                      conf_inclusive == true and (value in conf_data or conf_data == ["all"])
+                              -> [ad_id | acc]
+                      conf_inclusive == false and (value in conf_data == false)
+                              -> [ad_id | acc]
                       true -> acc
                     end
                 end)
+
+    Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex exit:\n#{inspect(ret)}" end
+
+    ret
   end
 
   def cleanup(indexName, _) do

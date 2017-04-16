@@ -75,7 +75,7 @@ defmodule ExAdServerTest do
     Enum.each(context.adsFilterData,
               fn(%{"request" => request, "expected" => expected}) ->
                   returned = ExAdServer.filterAd(adserver, request)
-                  assert(returned == MapSet.new(expected),
+                  assert(Enum.sort(returned) == Enum.sort(expected),
                         """
                         Unable to handle filtering on request
                         #{inspect(request)}
