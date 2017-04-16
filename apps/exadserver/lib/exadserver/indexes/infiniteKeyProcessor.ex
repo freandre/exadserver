@@ -8,7 +8,6 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
 
   require Logger
   import ExAdServer.Utils.Storage
-  alias ExAdServer.Utils.ListUtils
   alias :ets, as: ETS
 
   ## Behaviour Callbacks
@@ -18,7 +17,7 @@ defmodule ExAdServer.Indexes.InfiniteKeyProcessor do
     ret = targeterMetada
     |> Enum.filter_map(fn ({_, v}) -> v["type"] == "infinite" end,
                        fn ({k, v}) ->
-                         createBagStore(getIxAtom(k))                      
+                         createBagStore(getIxAtom(k))
                          {k, ExAdServer.Indexes.InfiniteKeyProcessor, v}
                        end)
     Logger.debug fn -> "[InfiniteKeyProcessor] - Exiting generateMetadata returning:\n#{inspect(ret)}" end

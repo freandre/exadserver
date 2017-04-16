@@ -104,9 +104,8 @@ defmodule ExAdServer do
     Task.start(fn ->
                  ret = Enum.reduce_while(target_metadata, :first,
                    fn({indexName, indexProcessor, indexMetaData}, acc) ->
-                     {time, set} = :timer.tc(fn -> indexProcessor.findInIndex(adRequest,
-                                                      {indexName, indexMetaData}, acc) end)
-#IO.puts(indexName <> ": " <> inspect(time))
+                     set = indexProcessor.findInIndex(adRequest,
+                                                      {indexName, indexMetaData}, acc)
                      checkMainStopCondition(set)
                    end)
                  Logger.debug fn -> "[adserver] - Exiting filter ad:\n #{inspect(ret)}" end
