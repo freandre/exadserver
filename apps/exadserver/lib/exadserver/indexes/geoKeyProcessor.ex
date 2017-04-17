@@ -61,12 +61,12 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
 
     ret = geo_targets
     |> Enum.map(fn(geo_target) ->
-                  Geohash.encode(geo_target["latitude"], geo_target["longitude"], geo_target["precision"])
+                  {geo_target["precision"], Geohash.encode(geo_target["latitude"], geo_target["longitude"], geo_target["precision"])}
                 end)
-    |> Enum.flat_map(fn(hash) ->
-                       [hash | hash
-                               |> Geohash.neighbors
-                               |> Enum.map(fn ({_, key}) -> key end)]
+    |> Enum.map(fn({precision, hash}) ->
+                       {precision, [hash | hash
+                                           |> Geohash.neighbors
+                                           |> Enum.map(fn ({_, key}) -> key end)]}
                      end)
 
     Logger.debug fn -> "> :#{inspect(ret)}" end
@@ -76,25 +76,15 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
 
   def findInIndex(adRequest, {indexName, _}, accumulator) do
     Logger.debug fn -> "[GeoKeyProcessor] - findInIndex request #{indexName}:\n#{inspect(accumulator)}" end
-    hashes = adRequest[indexName]
-             |> getGeoHashes
 
-    Logger.debug fn -> "> hash => #{inspect(hashes)}" end
+    hashes_cache = %{}
 
     ret = Enum.reduce(accumulator, [],
                 fn(ad_id, acc) ->
-                  [{^ad_id, {inclusive, conf_hashes}}] =
+                  [{^ad_id, {inclusive, geo_list}}] =
                               ETS.lookup(getIxAtom(indexName), ad_id)
 
-                    cond do
-                      inclusive == true and
-                          length(ListUtils.intersect(conf_hashes, hashes)) != 0
-                          -> [ad_id | acc]
-                      inclusive == false and
-                          length(ListUtils.intersect(conf_hashes, hashes)) == 0
-                          -> [ad_id | acc]
-                      true -> acc
-                    end
+
                 end)
 
     Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex exit:\n#{inspect(ret)}" end
