@@ -30,10 +30,7 @@ defmodule ExAdServer.Indexes.FiniteKeyProcessor do
   end
 
   def generateAndStoreIndex(adData, {_, indexMetadata}) do
-    Enum.each(indexMetadata,
-              fn(indexData) ->
-                generateAndStoreUniqueIndex(adData, indexData)
-              end)
+    Enum.each(indexMetadata, &(generateAndStoreUniqueIndex(adData, &1)))
   end
 
   def findInIndex(adRequest, {_, indexMetadata}, acc) do
@@ -141,21 +138,6 @@ defmodule ExAdServer.Indexes.FiniteKeyProcessor do
   defp getValue(requestValue), do: requestValue
 
   ## Decode a bitfield to a list of ad id
-  #defp decodebitFieldParallel({_, size} = data, ixToAdIDStore) do
-  #  BitUtils.splitBits(data, size) # for now do not split anything
-  #  |> Enum.map(fn({data, range}) ->
-  #                Task.async(fn ->
-  #                             BitUtils.listOfIndexOfOne(data, range)
-  #                           end)
-  #              end)
-  #  |> Enum.map(&(Task.await(&1)))
-  #  |> Enum.reduce([], &(&1 ++ &2))
-  #  |> Enum.reduce(MapSet.new,
-  #           fn(index, acc) ->
-  #             [{^index, ad_id}] = ETS.lookup(ixToAdIDStore, index)
-  #             MapSet.put(acc, ad_id)
-  #           end)
-  #end
   defp decodebitField(data, ixToAdIDStore) do
     data
     |> BitUtils.listOfIndexOfOne
