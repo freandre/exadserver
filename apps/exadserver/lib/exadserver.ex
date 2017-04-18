@@ -71,6 +71,8 @@ defmodule ExAdServer do
     num_ads = state[:maxIndex]
     state = Keyword.put(state, :maxIndex, num_ads + 1)
 
+    Logger.debug fn -> "[adserver] - Storing conf:\n #{inspect(adConf)}" end
+
     ETS.insert(:ads_store, {adConf["adid"],  adConf})
     ETS.insert(:bit_ix_to_ads_store, {num_ads, adConf["adid"]})
 
@@ -98,7 +100,7 @@ defmodule ExAdServer do
   ## handle_call callback for :filter, performs some targeting based on a
   ## targeting request
   def handle_call({:filter, adRequest}, from, state) do
-    Logger.debug fn -> "[adserver] - Entering filter ad:\n #{inspect(adRequest)}" end
+    Logger.debug fn -> "[adserver] - Entering filter conf:\n #{inspect(adRequest)}" end
     target_metadata = state[:targetMetadata]
 
     Task.start(fn ->
@@ -108,7 +110,7 @@ defmodule ExAdServer do
                                                       {indexName, indexMetaData}, acc)
                      checkMainStopCondition(set)
                    end)
-                 Logger.debug fn -> "[adserver] - Exiting filter ad:\n #{inspect(ret)}" end
+                 Logger.debug fn -> "[adserver] - Exiting filter conf:\n #{inspect(ret)}" end
                  GenServer.reply(from, ret)
                end)
     {:noreply, state}

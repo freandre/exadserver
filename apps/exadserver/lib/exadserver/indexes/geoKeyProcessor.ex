@@ -7,7 +7,6 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
 
   require Logger
   import ExAdServer.Utils.Storage
-  alias ExAdServer.Utils.ListUtils
   alias :ets, as: ETS
 
   ## Sorted array giving for a bit precision the approximation radius in meters of geohash
@@ -52,24 +51,22 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
   end
 
   def generateAndStoreIndex({adConf, _}, {indexName, _}) do
-
     geo_targets = getGeoTargets(adConf["targeting"][indexName]["data"])
     inclusive = adConf["targeting"][indexName]["inclusive"]
+
     Logger.debug "[GeoKeyProcessor] - generateAndStoreIndex processing:"
-    Logger.debug fn -> "inclusive: #{inspect(inclusive)}" end
-    Logger.debug fn -> "#{inspect(geo_targets)}" end
+    Logger.debug fn -> "> inclusive: #{inspect(inclusive)}" end
+    Logger.debug fn -> "> #{inspect(geo_targets)}" end
 
     ret = geo_targets
     |> Enum.map(fn(geo_target) ->
-                  {geo_target["precision"], Geohash.encode(geo_target["latitude"], geo_target["longitude"], geo_target["precision"])}
+                  hash = Geohash.encode(geo_target["latitude"], geo_target["longitude"], geo_target["precision"])
+                  {geo_target["precision"], [hash | hash
+                                                    |> Geohash.neighbors
+                                                    |> Enum.map(fn ({_, key}) -> key end)]}
                 end)
-    |> Enum.map(fn({precision, hash}) ->
-                       {precision, [hash | hash
-                                           |> Geohash.neighbors
-                                           |> Enum.map(fn ({_, key}) -> key end)]}
-                     end)
 
-    Logger.debug fn -> "> :#{inspect(ret)}" end
+    Logger.debug fn -> "> generated hash list: #{inspect(ret)}" end
 
     ETS.insert(getIxAtom(indexName), {adConf["adid"], {inclusive, ret}})
   end
@@ -79,15 +76,28 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
 
     hashes_cache = %{}
 
-    ret = Enum.reduce(accumulator, [],
-                fn(ad_id, acc) ->
+    {ret, _} = Enum.reduce(accumulator, {[], hashes_cache},
+                fn(ad_id, {cfg_list, hashes_cache}) ->
                   [{^ad_id, {inclusive, geo_list}}] =
                               ETS.lookup(getIxAtom(indexName), ad_id)
 
-
+                  {is_in, hashes_cache} = Enum.reduce_while(geo_list, {false, hashes_cache},
+                                               fn(data, {_, hashes_cache}) ->
+                                                 {is_in, hashes_cache} = findInUniqueGeoList(adRequest, hashes_cache, inclusive, data)
+                                                 if is_in do
+                                                   {:halt, {is_in, hashes_cache}}
+                                                 else
+                                                   {:cont, {is_in, hashes_cache}}
+                                                 end
+                                               end)
+                  if is_in do
+                    {[ad_id | cfg_list], hashes_cache}
+                  else
+                    {cfg_list, hashes_cache}
+                  end
                 end)
 
-    Logger.debug fn -> "[InfiniteKeyProcessor] - findInIndex exit:\n#{inspect(ret)}" end
+    Logger.debug fn -> "[GeoKeyProcessor] - findInIndex exit:\n#{inspect(ret)}" end
 
     ret
   end
@@ -102,7 +112,7 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
   defp getGeoTargets(geotargets), do: Enum.map(geotargets, &getGeoTarget/1)
 
   ## Create a map with latitude, longitude, precision
-  defp getGeoTarget(geotarget) when geotarget == "all" do
+  defp getGeoTarget("all") do
     %{"latitude" => 0,
     "longitude" => 0,
     "precision" => 1}
@@ -130,12 +140,28 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
     end
   end
 
-  ## Get a list oh geohash to look for
-  defp getGeoHashes(nil), do: [Geohash.encode(0, 0, 1)]
-  defp getGeoHashes(geo) do
-    Enum.map(@bitresolution,
-            fn({nbBits, _}) ->
-              Geohash.encode(geo["latitude"], geo["longitude"], computeResolution(nbBits))
-            end)
+  ## Check that a location is in a configuration list
+  defp findInUniqueGeoList(adRequest, hashes_cache, inclusive, {precision, geo_list}) do
+    {hash, hashes_cache} = getGeoHash(adRequest["geo"], precision, hashes_cache)
+    Logger.debug fn -> "[GeoKeyProcessor] - findInUniqueGeoList geo #{inspect(adRequest["geo"])}:\n#{inspect(hash)}\nin list:#{inspect(geo_list)}" end
+    cond do
+      inclusive and hash in geo_list
+          -> {true, hashes_cache}
+      inclusive != true and (hash in geo_list) != true
+          -> {true, hashes_cache}
+      true -> {false, hashes_cache}
+    end
+  end
+
+  ## Get a list of geohash to look for
+  defp getGeoHash(nil, _, hashes_cache), do: getGeoHash(0, 0, 1, hashes_cache)
+  defp getGeoHash(data, precision, hashes_cache), do: getGeoHash(data["latitude"], data["longitude"], precision, hashes_cache)
+  defp getGeoHash(lat, long, precision, hashes_cache) do
+    if Map.has_key?(hashes_cache, precision) do
+      {hashes_cache[precision], hashes_cache}
+    else
+      hash = Geohash.encode(lat, long, precision)
+      {hash, Map.put(hashes_cache, precision, hash)}
+    end
   end
 end
