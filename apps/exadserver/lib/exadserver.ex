@@ -78,13 +78,10 @@ defmodule ExAdServer do
 
     # Make the index storage parallel
     state[:targetMetadata]
-    |> Enum.map(fn({indexName, indexProcessor, indexMetaData}) ->
-                  #Task.async(fn ->
+    |> Enum.map(fn({indexName, indexProcessor, indexMetaData}) ->                  
                                indexProcessor.generateAndStoreIndex({adConf, num_ads},
                                                                     {indexName, indexMetaData})
-                             #end)
                 end)
-    #|> Enum.map(&(Task.await(&1)))
 
     {:reply, :ok, state}
   end
