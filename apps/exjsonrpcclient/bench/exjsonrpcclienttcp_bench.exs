@@ -2,6 +2,10 @@
 defmodule ExJSONRPCClientTCPBench do
   use Benchfella
 
+  ## This bench must be run with an additional iex -s mix process
+  ## Do not forget to load a set of conf before benchmarking the rpc
+  ## Enum.each(ExConfServer.getConf(ConfServer), &(ExAdServer.loadAd(AdServer, &1)))
+
   @address "localhost"
   @tcp_port 8181
 
