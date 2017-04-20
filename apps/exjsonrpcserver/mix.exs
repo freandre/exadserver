@@ -39,7 +39,7 @@ defmodule ExJSONRPCServer.Mixfile do
   defp deps do
     [
       {:exadserver, in_umbrella: true},
-      {:jsonrpc2, "~> 1.0"},
+      {:jsonrpc2, git: "https://github.com/freandre/jsonrpc2-elixir.git"},
       {:poison, "~> 3.1"},
       {:ranch, "~> 1.3"},
       {:plug, "~> 1.3"},

@@ -9,7 +9,11 @@ defmodule ExJSONRPCClientTCP do
   Starts the server.
   """
   def start(host, port) do
-    TCP.start(host, port, __MODULE__)
+   #Get the system tcp size
+   {:ok, socket} = :gen_tcp.connect(String.to_charlist(host), port, [:binary, active: false])
+   {:ok, values} = :inet.getopts(socket, [:recbuf, :sndbuf])
+   :gen_tcp.close(socket)
+    TCP.start(host, port, __MODULE__, [socket_options: [:binary, packet: :line, buffer: max(values[:recbuf], values[:sndbuf])]])
   end
 
   @doc """
@@ -31,7 +35,6 @@ defmodule ExJSONRPCClientTCP do
   Filter an ad generating a request
   """
   def filterAd(adRequest) do
-    {:ok, ret} = TCP.call(__MODULE__, "filterAd", adRequest)
-    ret
+    {:ok, ret} = TCP.call(__MODULE__, "filterAd", adRequest)    
   end
 end

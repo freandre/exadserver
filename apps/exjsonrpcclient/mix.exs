@@ -39,7 +39,7 @@ defmodule ExJSONRPCClient.Mixfile do
     [
       {:exconfserver, in_umbrella: true},
       {:exjsonrpcserver, in_umbrella: true},
-      {:jsonrpc2, "~> 1.0"},
+      {:jsonrpc2, git: "https://github.com/freandre/jsonrpc2-elixir.git"},
       {:poison, "~> 3.1"},
       {:shackle, "~> 0.5"},
       {:hackney, "~> 1.7"},
