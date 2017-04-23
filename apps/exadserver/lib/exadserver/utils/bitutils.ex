@@ -37,7 +37,7 @@ defmodule ExAdServer.Utils.BitUtils do
   @doc """
     Put a specific bit at position
   """
-  def setBitAt({data, size}, @bit_one, position),do: {:erlang.bor(data, :erlang.bsl(1, position)), :erlang.max(size, position + 1)}
+  def setBitAt({data, size}, @bit_one, position), do: {:erlang.bor(data, :erlang.bsl(1, position)), :erlang.max(size, position + 1)}
   def setBitAt({_, size} = val, @bit_zero, position) when position >= size, do: val
   def setBitAt({data, size} = val, @bit_zero, position) do
     head = :erlang.bsl(:erlang.bsr(data, position + 1), position + 1)

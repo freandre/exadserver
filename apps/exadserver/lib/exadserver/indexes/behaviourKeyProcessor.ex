@@ -26,7 +26,7 @@ defmodule  ExAdServer.Indexes.BehaviorKeysProcessor do
   third argument is a MapSet accumulator
   returns a set of matching ad configuration for this index
   """
-  @callback findInIndex(Map.t, Tuple.t, MapSet.t) :: MapSet.t
+  @callback findInIndex(Map.t, Tuple.t, :first | MapSet.t) :: MapSet.t
 
   @doc """
   Clean data

@@ -14,7 +14,7 @@ defmodule ExConfServer.Mixfile do
      aliases: aliases(),
      deps: deps()]
   end
-  
+
   defp aliases do
     [
       test: "test --no-start" #(2)
@@ -45,7 +45,7 @@ defmodule ExConfServer.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [{:poison, "~> 3.0"},
-     {:uuid, "~> 1.1" },
+     {:uuid, "~> 1.1"},
      {:benchfella, "~> 0.3.0"},
      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
      {:credo, "~> 0.7", only: [:dev, :test]}]

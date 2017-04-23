@@ -37,7 +37,7 @@ defmodule ExJSONRPCClientTCPBench do
   end
 
   defp pickValue(distinctValues) do
-    Enum.at(distinctValues, :rand.uniform(length(distinctValues)) -1 )
+    Enum.at(distinctValues, :rand.uniform(length(distinctValues)) - 1)
   end
 
   bench "Filtering on 6 targets on 5000 ads inventory " do

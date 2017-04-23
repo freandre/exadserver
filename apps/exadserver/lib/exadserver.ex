@@ -75,9 +75,9 @@ defmodule ExAdServer do
 
     ETS.insert(:ads_store, {adConf["adid"],  adConf})
     ETS.insert(:bit_ix_to_ads_store, {num_ads, adConf["adid"]})
-    
+
     state[:targetMetadata]
-    |> Enum.map(fn({indexName, indexProcessor, indexMetaData}) ->
+    |> Enum.each(fn({indexName, indexProcessor, indexMetaData}) ->
                                indexProcessor.generateAndStoreIndex({adConf, num_ads},
                                                                     {indexName, indexMetaData})
                 end)

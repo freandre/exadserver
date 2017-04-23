@@ -8,10 +8,10 @@ defmodule ExJSONRPCServer.Application do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
-    tcp_opts = generateTCPOptions()
+    tcp_opts = generate_tcp_options()
 
     JSONRPC2.Servers.TCP.start_listener(ExJSONRPCServer.Handler, tcp_opts[:port], tcp_opts[:opts])
-    JSONRPC2.Servers.HTTP.http(ExJSONRPCServer.Handler, generateHTTPOptions())
+    JSONRPC2.Servers.HTTP.http(ExJSONRPCServer.Handler, generate_http_options())
 
     # Define workers and child supervisors to be supervised
     children = [
@@ -28,14 +28,14 @@ defmodule ExJSONRPCServer.Application do
   ## Private functions
 
   ## Read and generate options for HTTP handler
-  defp generateHTTPOptions do
+  defp generate_http_options do
     data = Application.get_env(:exjsonrpcserver, HTTP)
     [acceptors: data[:num_acceptors]] ++
     [port: data[:port]]
   end
 
   ## Read and generate options for TCP handler
-  defp generateTCPOptions do
+  defp generate_tcp_options do
     data = Application.get_env(:exjsonrpcserver, TCP)
     [opts: [num_acceptors: data[:num_acceptors]]] ++
     [port: data[:port]]

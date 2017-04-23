@@ -35,6 +35,7 @@ defmodule ExJSONRPCClientTCP do
   Filter an ad generating a request
   """
   def filterAd(adRequest) do
-    {:ok, ret} = TCP.call(__MODULE__, "filterAd", adRequest)    
+    {:ok, ret} = TCP.call(__MODULE__, "filterAd", adRequest)
+    ret
   end
 end

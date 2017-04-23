@@ -8,13 +8,13 @@ defmodule ExConfServer.Application do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
-    initData = getInitData()
+    init_data = get_init_data()
 
     # Define workers and child supervisors to be supervised
     children = [
       # Starts a worker by calling: Exconfserver.Worker.start_link(arg1, arg2, arg3)
       # worker(Exconfserver.Worker, [arg1, arg2, arg3]),
-      worker(ExConfServer, [ConfServer, initData])
+      worker(ExConfServer, [ConfServer, init_data])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
@@ -27,7 +27,7 @@ defmodule ExConfServer.Application do
 
   ## Check in configuration if there is a testing value, if so use it in priority
   ## instead of DB connection
-  defp getInitData do
+  defp get_init_data do
     data = Application.get_env(:exconfserver, Testing)
     if data != nil do
       {data[:distinctPath], data[:numberOfConf]}

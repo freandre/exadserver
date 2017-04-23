@@ -29,16 +29,16 @@ defmodule ExAdServerTest do
     Enum.each(context.simpleAdsData, &ExAdServer.loadAd(adserver, &1))
 
     [ad | _] = context.simpleAdsData
-    adMod = Map.put(ad, "test", "test")
+    ad_mod = Map.put(ad, "test", "test")
 
-    ExAdServer.loadAd(adserver, adMod)
+    ExAdServer.loadAd(adserver, ad_mod)
     returned = ExAdServer.getAd(adserver, ad["adid"])
 
     assert(returned != ad,
           """
           Ads are identical
           Expected:
-          #{inspect(adMod)}
+          #{inspect(ad_mod)}
           Had:
           #{inspect(returned)}
           """)

@@ -84,11 +84,7 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
                   {is_in, hashes_cache} = Enum.reduce_while(geo_list, {false, hashes_cache},
                                                fn(data, {_, hashes_cache}) ->
                                                  {is_in, hashes_cache} = findInUniqueGeoList(adRequest, hashes_cache, inclusive, data)
-                                                 if is_in do
-                                                   {:halt, {is_in, hashes_cache}}
-                                                 else
-                                                   {:cont, {is_in, hashes_cache}}
-                                                 end
+                                                 build_return(is_in, hashes_cache)
                                                end)
                   if is_in do
                     {[ad_id | cfg_list], hashes_cache}
@@ -164,4 +160,8 @@ defmodule ExAdServer.Indexes.GeoKeyProcessor do
       {hash, Map.put(hashes_cache, precision, hash)}
     end
   end
+
+  ## Build the response based on the searching result
+  defp build_return(true, hashes_cache), do: {:halt, {true, hashes_cache}}
+  defp build_return(is_in, hashes_cache), do: {:cont, {is_in, hashes_cache}}
 end
