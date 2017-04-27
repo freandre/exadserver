@@ -16,9 +16,9 @@ defmodule ExAdServer do
   @doc """
   Starts the server.
   """
-  def start_link(name, targetMetadata) do
+  def start_link(name, targetMetadata, num_workers \\ 100) when num_workers > 0 do
     Logger.debug "[adserver] - start_link"
-    GenServer.start_link(__MODULE__, targetMetadata, [name: name])
+    GenServer.start_link(__MODULE__, {targetMetadata, num_workers}, [name: name])
   end
 
   @doc """
@@ -59,7 +59,7 @@ defmodule ExAdServer do
   ## init callback, we initialize the main store as well as the finite index store,
   ## an empty index registry for not finite values and finally the finite metadata
   ## structure
-  def init(metadata, num_workers \\ 100) when num_workers > 0 do
+  def init({metadata, num_workers}) do
     createStore(:ads_store)
     createStore(:bit_ix_to_ads_store)
     target_metadata = prepareMetadata(metadata)

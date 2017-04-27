@@ -36,7 +36,7 @@ defmodule ExJSONRPCClientHTTPBench do
     Enum.at(distinctValues, :rand.uniform(length(distinctValues)) - 1)
   end
 
-  bench "Filtering on 6 targets on 5000 ads inventory " do
+  bench "Filtering on 6 targets on 5000 ads inventory" do
     cfg = bench_context[:config]
     ExJSONRPCClientHTTP.filterAd(@address,  %{"country" => cfg["country"],
                                               "language" => cfg["language"],
@@ -47,4 +47,22 @@ defmodule ExJSONRPCClientHTTPBench do
     :ok
   end
 
+  bench "Filtering on 6 targets on 5000 ads inventory 100 process" do
+    cfg = bench_context[:config]
+    1..100
+    |> Enum.to_list
+    |> Enum.map(fn(_) ->
+                  Task.async(fn ->
+                              ExJSONRPCClientHTTP.filterAd(@address,  %{"country" => cfg["country"],
+                                                                        "language" => cfg["language"],
+                                                                        "iab" => cfg["iab"],
+                                                                        "hour" => cfg["hour"],
+                                                                        "minute" => cfg["minute"],
+                                                                        "support" => "google.com"})
+                            end)
+               end)
+    |> Enum.map(&(Task.await(&1)))
+
+    :ok
+  end
 end

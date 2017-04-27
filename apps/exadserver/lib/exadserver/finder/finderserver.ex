@@ -51,7 +51,7 @@ defmodule ExAdServer.Finder.FinderServer do
     Logger.debug fn -> "[FinderServer] - Exiting filter conf:\n #{inspect(ret)}" end
     GenServer.reply(send_to, ret)
 
-    {:reply, ret, state}
+    {:reply, :ok, state}
   end
 
   ## Shall we stop to loop
