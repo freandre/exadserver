@@ -1,4 +1,8 @@
 defmodule ExAdServer.Finder.FinderServer do
+  @moduledoc """
+  Finder GenServer to deal with concurrency
+  """
+
   require Logger
 
   use GenServer
