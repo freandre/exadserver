@@ -44,7 +44,7 @@ defmodule ExAdServer.Finder.FinderServer do
         checkMainStopCondition(set)
       end)
 
-    Logger.debug fn -> "[adserver] - Exiting filter conf:\n #{inspect(ret)}" end
+    Logger.debug fn -> "[FinderServer] - Exiting filter conf:\n #{inspect(ret)}" end
     GenServer.reply(send_to, ret)
 
     {:reply, ret, state}

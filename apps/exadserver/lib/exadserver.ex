@@ -100,7 +100,6 @@ defmodule ExAdServer do
   def handle_call({:filter, adRequest}, from, state) do
     pool = state[:finder_pool]
     {current, state} = Keyword.get_and_update(state, :current, &({&1, rem(&1 + 1, map_size(pool))}))
-
     FinderServer.filterAd(pool[current], adRequest, from)
     {:noreply, state}
   end
