@@ -5,6 +5,7 @@ defmodule ExAdServer do
   """
   require Logger
   alias ExAdServer.Indexes
+  alias ExAdServer.Finder.FinderServer
   import ExAdServer.Utils.Storage
   alias :ets, as: ETS
 
@@ -58,25 +59,26 @@ defmodule ExAdServer do
   ## init callback, we initialize the main store as well as the finite index store,
   ## an empty index registry for not finite values and finally the finite metadata
   ## structure
-  def init(targetMetadata) do
+  def init(metadata, num_workers \\ 100) when num_workers > 0 do
     createStore(:ads_store)
     createStore(:bit_ix_to_ads_store)
-    metadata = prepareMetadata(targetMetadata)
-    {:ok, [maxIndex: 0, targetMetadata: metadata]}
+    target_metadata = prepareMetadata(metadata)
+    finder_pool = getPool(target_metadata, num_workers)
+    {:ok, [max_index: 0, target_metadata: target_metadata, finder_pool: finder_pool, current: 0]}
   end
 
   ## handle_call callback for :load action, iterate on targeting keys creating
   ## an index for each
   def handle_call({:load, adConf}, _from, state) do
-    num_ads = state[:maxIndex]
-    state = Keyword.put(state, :maxIndex, num_ads + 1)
+    num_ads = state[:max_index]
+    state = Keyword.put(state, :max_index, num_ads + 1)
 
     Logger.debug fn -> "[adserver] - Storing conf:\n #{inspect(adConf)}" end
 
     ETS.insert(:ads_store, {adConf["adid"],  adConf})
     ETS.insert(:bit_ix_to_ads_store, {num_ads, adConf["adid"]})
 
-    state[:targetMetadata]
+    state[:target_metadata]
     |> Enum.each(fn({indexName, indexProcessor, indexMetaData}) ->
                                indexProcessor.generateAndStoreIndex({adConf, num_ads},
                                                                     {indexName, indexMetaData})
@@ -96,25 +98,16 @@ defmodule ExAdServer do
   ## handle_call callback for :filter, performs some targeting based on a
   ## targeting request
   def handle_call({:filter, adRequest}, from, state) do
-    Logger.debug fn -> "[adserver] - Entering filter conf:\n #{inspect(adRequest)}" end
-    target_metadata = state[:targetMetadata]
+    pool = state[:finder_pool]
+    {current, state} = Keyword.get_and_update(state, :current, &({&1, rem(&1 + 1, map_size(pool))}))
 
-    Task.start(fn ->
-                 ret = Enum.reduce_while(target_metadata, :first,
-                   fn({indexName, indexProcessor, indexMetaData}, acc) ->
-                     set = indexProcessor.findInIndex(adRequest,
-                                                      {indexName, indexMetaData}, acc)
-                     checkMainStopCondition(set)
-                   end)
-                 Logger.debug fn -> "[adserver] - Exiting filter conf:\n #{inspect(ret)}" end
-                 GenServer.reply(from, ret)
-               end)
+    FinderServer.filterAd(pool[current], adRequest, from)
     {:noreply, state}
   end
 
   def terminate(_, state) do
     Logger.debug "[adserver] - terminate"
-    state[:targetMetadata]
+    state[:target_metadata]
     |> Enum.each(fn({indexName, indexProcessor, indexMetaData}) ->
                   indexProcessor.cleanup(indexName, indexMetaData)
                 end)
@@ -130,19 +123,22 @@ defmodule ExAdServer do
   ## most of the request, followed by infinite and finally the most computer
   ## intensive geolocation. Finite set are  aggregated to handle bitwise
   ## filtering
-  defp prepareMetadata(targetMetadata) do
-    Logger.debug fn -> "[adserver] - Entering prepareMetadata:\n #{inspect(targetMetadata)}" end
+  defp prepareMetadata(target_metadata) do
+    Logger.debug fn -> "[adserver] - Entering prepareMetadata:\n #{inspect(target_metadata)}" end
 
-    ret = Indexes.FiniteKeyProcessor.generateMetadata(targetMetadata) ++
-    Indexes.InfiniteKeyProcessor.generateMetadata(targetMetadata) ++
-    Indexes.GeoKeyProcessor.generateMetadata(targetMetadata)
+    ret = Indexes.FiniteKeyProcessor.generateMetadata(target_metadata) ++
+    Indexes.InfiniteKeyProcessor.generateMetadata(target_metadata) ++
+    Indexes.GeoKeyProcessor.generateMetadata(target_metadata)
 
     Logger.debug fn -> "[adserver] - Exiting prepareMetadata:\n#{inspect(ret)}" end
 
     ret
   end
 
-  ## Shall we stop to loop
-  defp checkMainStopCondition([] = list), do: {:halt, list}
-  defp checkMainStopCondition(list), do: {:cont, list}
+  ## Prepare a pool of workers
+  defp getPool(target_metadata, num_workers) do
+    0..(num_workers - 1)
+    |> Enum.to_list
+    |> Enum.reduce(%{}, &(Map.put(&2, &1, elem(FinderServer.start_link(target_metadata), 1))))
+  end
 end
